@@ -3,173 +3,606 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STRAVA // COMMAND CENTER</title>
+    <title>STRAVA // ATHLETE DASHBOARD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <style>
+        /* ============================================
+           FERRARI DESIGN SYSTEM - STRAVA DASHBOARD
+           Chiaroscuro Editorial Aesthetic
+           ============================================ */
+        
         :root {
-            --void: #0a0a0a;
-            --void-secondary: #0f0f0f;
-            --burn-orange: #FC4C02;
-            --ember: rgba(252, 76, 2, 0.15);
-            --ember-glow: rgba(252, 76, 2, 0.08);
-            --mist-04: rgba(255, 255, 255, 0.04);
-            --mist-06: rgba(255, 255, 255, 0.06);
-            --mist-08: rgba(255, 255, 255, 0.08);
-            --mist-10: rgba(255, 255, 255, 0.10);
-            --mist-12: rgba(255, 255, 255, 0.12);
-            --ghost: rgba(255, 255, 255, 0.5);
-            --specter: rgba(255, 255, 255, 0.6);
-            --white: #ffffff;
-            --brutalist: 4px 4px 0px 0px rgba(252, 76, 2, 0.3);
+            /* Primary - Ferrari Red used sparingly */
+            --ferrari-red: #DA291C;
+            --ferrari-red-dark: #B01E0A;
+            --ferrari-red-deep: #9D2211;
+            
+            /* Surfaces */
+            --absolute-black: #000000;
+            --dark-surface: #303030;
+            --pure-white: #FFFFFF;
+            --light-gray: #D2D2D2;
+            
+            /* Neutrals & Text */
+            --near-black: #181818;
+            --dark-gray: #666666;
+            --mid-gray: #8F8F8F;
+            --silver-gray: #969696;
+            --border-gray: #CCCCCC;
+            
+            /* Accent */
+            --link-hover: #3860BE;
+            
+            /* Semantic */
+            --success: #03904A;
+            --warning: #F13A2C;
+            --info: #4C98B9;
+            
+            /* Overlay */
+            --overlay-dark: hsla(0, 0%, 7%, 0.8);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: var(--void);
-            color: var(--white);
-            min-height: 100vh;
-            line-height: 1;
-            overflow-x: hidden;
+            font-family: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--absolute-black);
+            color: var(--near-black);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.4;
+        /* ============================================
+           EDITORIAL HEADER - Absolute Black
+           ============================================ */
+        
+        .header-dark {
+            background: var(--absolute-black);
+            border-bottom: 1px solid var(--dark-surface);
+            padding: 32px 48px;
+            position: relative;
         }
 
-        .glow-container {
-            position: fixed;
-            top: -50%; left: -20%;
-            width: 800px; height: 800px;
-            background: radial-gradient(circle, rgba(252, 76, 2, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-            animation: pulse-glow 8s ease-in-out infinite;
-        }
-        .glow-container.secondary { top: 40%; left: 60%; width: 600px; height: 600px; animation-delay: -4s; }
-        @keyframes pulse-glow { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.8; } }
-
-        header {
-            position: relative; z-index: 10;
-            padding: 24px 48px;
-            border-bottom: 1px solid var(--mist-08);
-            display: flex; justify-content: space-between; align-items: center;
-            background: linear-gradient(180deg, var(--void) 0%, var(--void-secondary) 100%);
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .brand { display: flex; align-items: baseline; gap: 12px; }
-        .brand-logo { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600; color: var(--burn-orange); letter-spacing: -0.5px; text-transform: uppercase; }
-        .brand-divider { color: var(--mist-12); font-weight: 300; }
-        .brand-tagline { font-size: 11px; color: var(--ghost); text-transform: uppercase; letter-spacing: 2px; font-weight: 400; }
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        .status-bar { display: flex; align-items: center; gap: 24px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ghost); text-transform: uppercase; letter-spacing: 1px; }
-        .status-indicator { display: flex; align-items: center; gap: 8px; }
-        .status-dot { width: 6px; height: 6px; background: var(--burn-orange); border-radius: 50%; animation: blink 2s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .brand-emblem {
+            width: 48px;
+            height: 48px;
+            background: var(--ferrari-red);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--pure-white);
+            letter-spacing: -1px;
+        }
+
+        .brand-label {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--silver-gray);
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--pure-white);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--ferrari-red);
+            border-radius: 50%;
+        }
+
+        .athlete-id {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--mid-gray);
+        }
 
         .disconnect-btn {
             background: transparent;
-            border: 1px solid var(--mist-10);
-            color: var(--ghost);
-            padding: 8px 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
+            border: 1px solid var(--dark-surface);
+            color: var(--mid-gray);
+            padding: 10px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
+            border-radius: 2px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .disconnect-btn:hover { border-color: var(--burn-orange); color: var(--burn-orange); }
 
-        main { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 48px; }
+        .disconnect-btn:hover {
+            border-color: var(--ferrari-red);
+            color: var(--ferrari-red);
+        }
 
+        /* ============================================
+           HERO SECTION - Absolute Black (Cinematic)
+           ============================================ */
+        
+        .hero-dark {
+            background: var(--absolute-black);
+            padding: 80px 48px 64px;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-label {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ferrari-red);
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-size: 52px;
+            font-weight: 500;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: var(--pure-white);
+            margin-bottom: 32px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 48px;
+        }
+
+        .hero-meta-item {
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--mid-gray);
+        }
+
+        .hero-meta-item span {
+            color: var(--pure-white);
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        /* ============================================
+           EDITORIAL SECTION - Pure White
+           ============================================ */
+        
+        .section-white {
+            background: var(--pure-white);
+            padding: 64px 48px;
+        }
+
+        .section-dark {
+            background: var(--absolute-black);
+            padding: 64px 48px;
+        }
+
+        .section-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 48px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .section-header-dark {
+            border-bottom-color: var(--dark-surface);
+        }
+
+        .section-number {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ferrari-red);
+        }
+
+        .section-title {
+            font-size: 26px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: var(--near-black);
+            letter-spacing: -0.5px;
+        }
+
+        .section-title-light {
+            color: var(--pure-white);
+        }
+
+        /* ============================================
+           METRICS GRID - Editorial Cards
+           ============================================ */
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .metric-card {
+            background: transparent;
+            border: 1px solid var(--border-gray);
+            border-radius: 2px;
+            padding: 32px;
+            transition: border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--near-black);
+        }
+
+        .metric-card-dark {
+            border-color: var(--dark-surface);
+        }
+
+        .metric-card-dark:hover {
+            border-color: var(--mid-gray);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--mid-gray);
+            margin-bottom: 16px;
+        }
+
+        .metric-label-light {
+            color: var(--silver-gray);
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 500;
+            line-height: 1;
+            letter-spacing: -1px;
+            color: var(--near-black);
+            margin-bottom: 8px;
+        }
+
+        .metric-value-light {
+            color: var(--pure-white);
+        }
+
+        .metric-unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--dark-gray);
+            margin-left: 4px;
+        }
+
+        .metric-secondary {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--silver-gray);
+        }
+
+        /* ============================================
+           ACTIVITY TABLE - Clean Editorial
+           ============================================ */
+        
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: left;
+            padding: 16px 24px;
+            color: var(--dark-gray);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .activity-table td {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 14px;
+            color: var(--near-black);
+        }
+
+        .activity-row {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .activity-row:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .activity-name {
+            font-weight: 500;
+            color: var(--near-black);
+        }
+
+        .activity-metric {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .activity-metric .unit {
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--silver-gray);
+            margin-left: 2px;
+        }
+
+        .activity-chevron {
+            font-size: 14px;
+            color: var(--mid-gray);
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .activity-row:hover .activity-chevron {
+            opacity: 1;
+            color: var(--ferrari-red);
+            transform: translateX(4px);
+        }
+
+        /* ============================================
+           STAT PANELS - Dark Surface
+           ============================================ */
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .stat-panel {
+            background: transparent;
+            border: 1px solid var(--dark-surface);
+            border-radius: 2px;
+            padding: 32px;
+        }
+
+        .stat-panel-header {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ferrari-red);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--dark-surface);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--dark-surface);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-key {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--silver-gray);
+        }
+
+        .stat-val {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--pure-white);
+        }
+
+        .stat-val-accent {
+            color: var(--ferrari-red);
+        }
+
+        /* ============================================
+           OAUTH SCREEN - Cinematic Dark
+           ============================================ */
+        
         .oauth-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 200px);
+            min-height: calc(100vh - 100px);
+            background: var(--absolute-black);
             text-align: center;
+            padding: 48px;
+        }
+
+        .oauth-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--ferrari-red);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--pure-white);
+            letter-spacing: -2px;
+            margin-bottom: 48px;
         }
 
         .oauth-title {
-            font-size: 64px;
-            font-weight: 700;
-            line-height: 0.9;
-            letter-spacing: -3px;
+            font-size: 52px;
+            font-weight: 500;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: var(--pure-white);
             margin-bottom: 24px;
-            background: linear-gradient(135deg, var(--white) 0%, var(--specter) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .oauth-subtitle {
             font-size: 16px;
-            color: var(--ghost);
-            margin-bottom: 48px;
-            max-width: 500px;
+            font-weight: 400;
             line-height: 1.5;
+            color: var(--mid-gray);
+            max-width: 480px;
+            margin-bottom: 48px;
         }
 
-        .oauth-btn {
+        /* ============================================
+           BUTTONS - Ferrari Red CTA
+           ============================================ */
+        
+        .btn-primary {
             display: inline-flex;
             align-items: center;
-            gap: 16px;
-            background: var(--burn-orange);
-            color: var(--white);
-            padding: 20px 48px;
-            font-family: 'JetBrains Mono', monospace;
+            gap: 12px;
+            background: var(--ferrari-red);
+            color: var(--pure-white);
+            padding: 14px 32px;
+            font-family: 'DM Sans', sans-serif;
             font-size: 14px;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-decoration: none;
             border: none;
+            border-radius: 2px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 40px rgba(252, 76, 2, 0.3);
+            transition: all 0.2s ease;
         }
 
-        .oauth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 60px rgba(252, 76, 2, 0.5);
+        .btn-primary:hover {
+            background: var(--ferrari-red-dark);
         }
 
-        .oauth-btn::before {
-            content: "⚡";
-            font-size: 18px;
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--pure-white);
+            color: var(--near-black);
+            padding: 14px 32px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            border: 1px solid var(--near-black);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--near-black);
+            color: var(--pure-white);
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: transparent;
+            color: var(--pure-white);
+            padding: 14px 32px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            border: 1px solid var(--pure-white);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ghost:hover {
+            background: var(--pure-white);
+            color: var(--absolute-black);
         }
 
         .oauth-note {
             margin-top: 32px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: var(--ghost);
-            opacity: 0.6;
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--dark-gray);
         }
 
+        /* ============================================
+           LOADING SCREEN
+           ============================================ */
+        
         .loading-screen {
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 200px);
+            min-height: calc(100vh - 100px);
+            background: var(--absolute-black);
         }
 
         .loading-spinner {
             width: 48px;
             height: 48px;
-            border: 2px solid var(--mist-08);
-            border-top-color: var(--burn-orange);
+            border: 2px solid var(--dark-surface);
+            border-top-color: var(--ferrari-red);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -178,193 +611,285 @@
 
         .loading-text {
             margin-top: 24px;
-            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: var(--ghost);
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            color: var(--mid-gray);
         }
 
-        .dashboard { display: none; }
+        /* ============================================
+           DASHBOARD CONTAINER
+           ============================================ */
+        
+        .dashboard {
+            display: none;
+        }
 
-        .hero { margin-bottom: 64px; padding: 48px 0; border-bottom: 1px solid var(--mist-08); }
-        .hero-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--burn-orange); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 16px; }
-        .hero-title { font-size: 72px; font-weight: 700; line-height: 0.9; letter-spacing: -3px; margin-bottom: 24px; background: linear-gradient(135deg, var(--white) 0%, var(--specter) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-meta { display: flex; gap: 48px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ghost); }
-        .hero-meta span { color: var(--white); }
+        /* ============================================
+           FOOTER
+           ============================================ */
+        
+        .footer {
+            background: var(--dark-surface);
+            padding: 32px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--mist-04); }
-        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--burn-orange); text-transform: uppercase; letter-spacing: 2px; }
-        .section-title { font-size: 14px; color: var(--specter); font-weight: 400; }
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 64px; }
-        .metric-card { background: var(--void-secondary); border: 1px solid var(--mist-08); padding: 32px; position: relative; overflow: hidden; transition: all 0.3s ease; }
-        .metric-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--burn-orange), transparent); opacity: 0; transition: opacity 0.3s ease; }
-        .metric-card:hover { border-color: var(--mist-12); box-shadow: var(--brutalist); }
-        .metric-card:hover::before { opacity: 1; }
-        .metric-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ghost); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
-        .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 300; color: var(--white); letter-spacing: -2px; }
-        .metric-value .unit { font-size: 18px; color: var(--ghost); margin-left: 4px; }
-        .metric-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ghost); margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-brand {
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ferrari-red);
+        }
 
-        .activity-section { margin-bottom: 64px; }
-        .activity-table { width: 100%; border-collapse: collapse; }
-        .activity-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ghost); text-transform: uppercase; letter-spacing: 2px; text-align: left; padding: 16px 24px; border-bottom: 1px solid var(--mist-08); font-weight: 400; }
-        .activity-table td { padding: 24px; border-bottom: 1px solid var(--mist-04); font-size: 14px; transition: all 0.2s ease; }
-        .activity-row { cursor: pointer; }
-        .activity-row:hover td { background: var(--ember-glow); border-bottom-color: var(--mist-08); }
-        .activity-name { font-weight: 500; color: var(--white); }
-        .activity-chevron { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ghost); opacity: 0; transition: all 0.2s ease; }
-        .activity-row:hover .activity-chevron { opacity: 1; color: var(--burn-orange); transform: translateX(4px); }
-        .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--specter); }
-        .mono.highlight { color: var(--burn-orange); }
-        .mono .unit { font-size: 10px; color: var(--ghost); margin-left: 4px; text-transform: uppercase; }
+        .footer-meta {
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--silver-gray);
+        }
 
-        .secondary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .stat-panel { background: var(--void-secondary); border: 1px solid var(--mist-06); padding: 32px; }
-        .stat-panel-header { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--burn-orange); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--mist-04); }
-        .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--mist-04); }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-key { font-size: 13px; color: var(--specter); }
-        .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--white); }
+        /* ============================================
+           ERROR MESSAGES
+           ============================================ */
+        
+        .error-message {
+            background: rgba(218, 41, 28, 0.1);
+            border: 1px solid rgba(218, 41, 28, 0.3);
+            color: var(--ferrari-red);
+            padding: 16px 24px;
+            margin-top: 24px;
+            font-size: 13px;
+            font-weight: 500;
+            max-width: 480px;
+        }
 
-        footer { margin-top: 96px; padding: 48px 0; border-top: 1px solid var(--mist-08); display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ghost); text-transform: uppercase; letter-spacing: 2px; }
-        .footer-brand { color: var(--burn-orange); }
-
-        .error-message { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); color: #ff6b6b; padding: 16px 24px; margin-top: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        
         @media (max-width: 1024px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .secondary-grid { grid-template-columns: 1fr; }
-            .hero-title, .oauth-title { font-size: 48px; }
+            .stat-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 40px; }
+            .oauth-title { font-size: 40px; }
         }
+
         @media (max-width: 768px) {
-            header { padding: 16px 24px; }
-            main { padding: 24px; }
-            .hero-title, .oauth-title { font-size: 36px; }
+            .header-dark { padding: 24px; }
+            .section-white, .section-dark { padding: 48px 24px; }
+            .hero-dark { padding: 48px 24px; }
+            .hero-title { font-size: 32px; }
+            .oauth-title { font-size: 32px; }
+            .hero-meta { flex-direction: column; gap: 16px; }
             .metrics-grid { grid-template-columns: 1fr; }
-            .activity-table th:nth-child(2), .activity-table td:nth-child(2), .activity-table th:nth-child(6), .activity-table td:nth-child(6), .activity-table th:nth-child(7), .activity-table td:nth-child(7) { display: none; }
+            .activity-table th:nth-child(2), 
+            .activity-table td:nth-child(2),
+            .activity-table th:nth-child(6),
+            .activity-table td:nth-child(6),
+            .activity-table th:nth-child(7),
+            .activity-table td:nth-child(7) { display: none; }
+            .footer { flex-direction: column; gap: 16px; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="glow-container"></div>
-    <div class="glow-container secondary"></div>
-    
-    <header>
-        <div class="brand">
-            <span class="brand-logo">STRAVA</span>
-            <span class="brand-divider">//</span>
-            <span class="brand-tagline">Command Center</span>
-        </div>
-        <div class="status-bar" id="headerStatus">
-            <div class="status-indicator" id="connectionStatus" style="display: none;">
-                <span class="status-dot"></span>
-                <span>LIVE</span>
-            </div>
-            <span id="athleteIdDisplay"></span>
-            <button class="disconnect-btn" id="disconnectBtn" style="display: none;" onclick="disconnect()">Disconnect</button>
-        </div>
-    </header>
+    <!-- ============================================
+         OAUTH SCREEN - Cinematic Entry
+         ============================================ -->
+    <div class="oauth-screen" id="oauthScreen">
+        <div class="oauth-logo">S</div>
+        <h1 class="oauth-title">Strava Dashboard</h1>
+        <p class="oauth-subtitle">Connect your Strava account to access your athletic performance data, activity logs, and real-time statistics.</p>
+        <a href="https://www.strava.com/oauth/authorize?client_id=225803&response_type=code&redirect_uri=YOUR_VERCEL_URL&approval_prompt=force&scope=read,activity:read,profile:read_all" class="btn-primary" id="authLink">Authorize with Strava</a>
+        <p class="oauth-note">Requires Strava account • Read-only access</p>
+        <div id="oauthError"></div>
+    </div>
 
-    <main>
-        <!-- OAuth Screen -->
-        <div class="oauth-screen" id="oauthScreen">
-            <h1 class="oauth-title">COMMAND<br>CENTER</h1>
-            <p class="oauth-subtitle">Connect your Strava account to access your athletic performance data, activity logs, and real-time statistics.</p>
-            <a href="https://www.strava.com/oauth/authorize?client_id=225803&response_type=code&redirect_uri=YOUR_VERCEL_URL&approval_prompt=force&scope=read,activity:read,profile:read_all" class="oauth-btn" id="authLink">Authorize with Strava</a>
-            <p class="oauth-note">Requires Strava account • Read-only access</p>
-            <div id="oauthError"></div>
-        </div>
+    <!-- ============================================
+         LOADING SCREEN
+         ============================================ -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" id="loadingText">Initializing...</p>
+    </div>
 
-        <!-- Loading Screen -->
-        <div class="loading-screen" id="loadingScreen">
-            <div class="loading-spinner"></div>
-            <p class="loading-text" id="loadingText">Initializing...</p>
-        </div>
-
-        <!-- Dashboard -->
-        <div class="dashboard" id="dashboard">
-            <section class="hero">
-                <div class="hero-label" id="memberSince">Athlete Profile</div>
-                <h1 class="hero-title" id="athleteName">LOADING...</h1>
-                <div class="hero-meta" id="athleteMeta">
-                    <div>USERNAME <span id="username">--</span></div>
-                    <div>STATUS <span id="status">--</span></div>
-                    <div>ACCESS <span id="access">--</span></div>
+    <!-- ============================================
+         DASHBOARD - Chiaroscuro Editorial Layout
+         ============================================ -->
+    <div class="dashboard" id="dashboard">
+        
+        <!-- Header - Absolute Black -->
+        <header class="header-dark">
+            <div class="header-content">
+                <div class="brand">
+                    <div class="brand-emblem">S</div>
+                    <span class="brand-label">Strava Dashboard</span>
                 </div>
-            </section>
+                <div class="header-meta" id="headerStatus" style="display: none;">
+                    <div class="status-badge">
+                        <span class="status-dot"></span>
+                        <span>Connected</span>
+                    </div>
+                    <span class="athlete-id" id="athleteIdDisplay"></span>
+                    <button class="disconnect-btn" id="disconnectBtn" onclick="disconnect()">Disconnect</button>
+                </div>
+            </div>
+        </header>
 
-            <section>
+        <!-- Hero - Absolute Black -->
+        <section class="hero-dark">
+            <div class="hero-content">
+                <div class="hero-label" id="memberSince">Athlete Profile</div>
+                <h1 class="hero-title" id="athleteName">Loading...</h1>
+                <div class="hero-meta">
+                    <div class="hero-meta-item">Username <span id="username">--</span></div>
+                    <div class="hero-meta-item">Status <span id="status">--</span></div>
+                    <div class="hero-meta-item">Access <span id="access">--</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics - Pure White Editorial -->
+        <section class="section-white">
+            <div class="section-content">
                 <div class="section-header">
-                    <span class="section-label">01 // Performance Metrics</span>
-                    <span class="section-title">All-Time Statistics</span>
+                    <span class="section-number">01</span>
+                    <h2 class="section-title">Performance Metrics</h2>
                 </div>
                 <div class="metrics-grid" id="metricsGrid">
-                    <div class="metric-card"><div class="metric-label">Loading...</div><div class="metric-value">--</div></div>
-                    <div class="metric-card"><div class="metric-label">Loading...</div><div class="metric-value">--</div></div>
-                    <div class="metric-card"><div class="metric-label">Loading...</div><div class="metric-value">--</div></div>
-                    <div class="metric-card"><div class="metric-label">Loading...</div><div class="metric-value">--</div></div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Activities</div>
+                        <div class="metric-value">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Distance</div>
+                        <div class="metric-value">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Time Active</div>
+                        <div class="metric-value">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Elevation Gain</div>
+                        <div class="metric-value">--</div>
+                    </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="activity-section">
-                <div class="section-header">
-                    <span class="section-label">02 // Activity Log</span>
-                    <span class="section-title">Recent Sessions</span>
+        <!-- Activity Log - Absolute Black -->
+        <section class="section-dark">
+            <div class="section-content">
+                <div class="section-header section-header-dark">
+                    <span class="section-number">02</span>
+                    <h2 class="section-title section-title-light">Activity Log</h2>
                 </div>
                 <table class="activity-table">
                     <thead>
                         <tr>
-                            <th>Session</th>
-                            <th>Timestamp</th>
+                            <th>Activity</th>
+                            <th>Date</th>
                             <th>Distance</th>
                             <th>Duration</th>
                             <th>Pace</th>
                             <th>Heart Rate</th>
-                            <th>Load</th>
+                            <th>Effort</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="activityTableBody">
-                        <tr><td colspan="8" style="text-align:center;color:var(--ghost);padding:48px;">LOADING ACTIVITIES...</td></tr>
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--silver-gray); padding: 48px;">Loading activities...</td>
+                        </tr>
                     </tbody>
                 </table>
-            </section>
+            </div>
+        </section>
 
-            <section>
+        <!-- Secondary Stats - Pure White -->
+        <section class="section-white">
+            <div class="section-content">
                 <div class="section-header">
-                    <span class="section-label">03 // Secondary Data</span>
-                    <span class="section-title">Cycling & Recent Activity</span>
+                    <span class="section-number">03</span>
+                    <h2 class="section-title">Secondary Data</h2>
                 </div>
-                <div class="secondary-grid" id="secondaryGrid">
+                <div class="stat-grid" id="secondaryGrid">
                     <div class="stat-panel">
                         <div class="stat-panel-header">Cycling Metrics</div>
-                        <div class="stat-row"><span class="stat-key">Loading...</span><span class="stat-val">--</span></div>
+                        <div class="stat-row">
+                            <span class="stat-key">Total Rides</span>
+                            <span class="stat-val">--</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Distance</span>
+                            <span class="stat-val">--</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Longest Ride</span>
+                            <span class="stat-val">--</span>
+                        </div>
                     </div>
                     <div class="stat-panel">
                         <div class="stat-panel-header">Recent 4 Weeks</div>
-                        <div class="stat-row"><span class="stat-key">Loading...</span><span class="stat-val">--</span></div>
+                        <div class="stat-row">
+                            <span class="stat-key">Activities</span>
+                            <span class="stat-val">--</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Distance</span>
+                            <span class="stat-val">--</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Avg per Activity</span>
+                            <span class="stat-val">--</span>
+                        </div>
                     </div>
                     <div class="stat-panel">
                         <div class="stat-panel-header">System Status</div>
-                        <div class="stat-row"><span class="stat-key">API Status</span><span class="stat-val" style="color: var(--burn-orange);">ONLINE</span></div>
+                        <div class="stat-row">
+                            <span class="stat-key">API Status</span>
+                            <span class="stat-val stat-val-accent">ONLINE</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Last Sync</span>
+                            <span class="stat-val" id="lastSync">--</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Data Source</span>
+                            <span class="stat-val">STRAVA API</span>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <footer>
-                <span class="footer-brand">STRAVA COMMAND CENTER</span>
-                <span id="footerAthlete">Not connected</span>
-            </footer>
-        </div>
-    </main>
+        <!-- Footer - Dark Surface -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="footer-brand">Strava Dashboard</span>
+                <span class="footer-meta" id="footerAthlete">Not connected</span>
+            </div>
+        </footer>
+    </div>
 
     <script>
         // CONFIG - Hardcoded to match exactly what's registered with Strava
         const REDIRECT_URI = 'https://strava-dashboard-sigma.vercel.app';
-        
-        console.log('[OAuth] Using redirect_uri:', REDIRECT_URI);
         
         // Update auth link with the exact redirect URI
         document.getElementById('authLink').href = `https://www.strava.com/oauth/authorize?client_id=225803&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&approval_prompt=force&scope=read,activity:read,profile:read_all`;
@@ -389,7 +914,7 @@
         };
         const formatDate = (iso) => {
             const d = new Date(iso);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         };
 
         function showScreen(screen) {
@@ -409,9 +934,6 @@
 
         // API CALLS - Uses server-side proxy for token exchange
         async function exchangeTokenViaProxy(code) {
-            console.log('[OAuth] Exchanging code for token, code length:', code?.length);
-            console.log('[OAuth] Sending redirect_uri:', REDIRECT_URI);
-            
             const res = await fetch('/api/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -434,60 +956,63 @@
         }
 
         function renderDashboard(profile, activities, stats) {
-            document.getElementById('athleteName').innerHTML = `${profile.firstname}<br>${profile.lastname}`;
+            // Hero Section
+            document.getElementById('athleteName').textContent = `${profile.firstname} ${profile.lastname}`;
             document.getElementById('username').textContent = profile.username || 'unknown';
             document.getElementById('status').textContent = profile.premium ? 'ELITE' : 'ACTIVE';
             document.getElementById('access').textContent = profile.summit ? 'SUMMIT' : 'STANDARD';
             document.getElementById('memberSince').textContent = `Athlete Profile // ${new Date(profile.created_at).getFullYear()}`;
             document.getElementById('athleteIdDisplay').textContent = `ID: ${profile.id}`;
-            document.getElementById('connectionStatus').style.display = 'flex';
-            document.getElementById('disconnectBtn').style.display = 'block';
+            document.getElementById('headerStatus').style.display = 'flex';
             document.getElementById('footerAthlete').textContent = `${profile.firstname.toUpperCase()} ${profile.lastname.toUpperCase()} // ID ${profile.id}`;
             
+            // Metrics Section
             const allRun = stats.all_run_totals || {};
             const ytdRun = stats.ytd_run_totals || {};
             
             document.getElementById('metricsGrid').innerHTML = `
                 <div class="metric-card">
-                    <div class="metric-label">Total Runs</div>
-                    <div class="metric-value">${allRun.count || 0}<span class="unit">ACT</span></div>
+                    <div class="metric-label">Total Activities</div>
+                    <div class="metric-value">${allRun.count || 0}<span class="metric-unit">runs</span></div>
                     <div class="metric-secondary">${ytdRun.count || 0} YTD</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Distance</div>
-                    <div class="metric-value">${Math.round((allRun.distance || 0) / 1000).toLocaleString()}<span class="unit">KM</span></div>
-                    <div class="metric-secondary">${Math.round((ytdRun.distance || 0) / 1000).toLocaleString()} YTD</div>
+                    <div class="metric-label">Total Distance</div>
+                    <div class="metric-value">${Math.round((allRun.distance || 0) / 1000).toLocaleString()}<span class="metric-unit">km</span></div>
+                    <div class="metric-secondary">${Math.round((ytdRun.distance || 0) / 1000).toLocaleString()} km YTD</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Time Active</div>
-                    <div class="metric-value">${Math.round((allRun.moving_time || 0) / 3600).toLocaleString()}<span class="unit">HR</span></div>
-                    <div class="metric-secondary">${Math.round((allRun.moving_time || 0) / 3600 / 24)} DAYS</div>
+                    <div class="metric-value">${Math.round((allRun.moving_time || 0) / 3600).toLocaleString()}<span class="metric-unit">hr</span></div>
+                    <div class="metric-secondary">${Math.round((allRun.moving_time || 0) / 3600 / 24)} days total</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Elevation</div>
-                    <div class="metric-value">${Math.round(allRun.elevation_gain || 0).toLocaleString()}<span class="unit">M</span></div>
-                    <div class="metric-secondary">GAIN</div>
+                    <div class="metric-label">Elevation Gain</div>
+                    <div class="metric-value">${Math.round(allRun.elevation_gain || 0).toLocaleString()}<span class="metric-unit">m</span></div>
+                    <div class="metric-secondary">Total gain</div>
                 </div>
             `;
             
+            // Activity Table
             const tbody = document.getElementById('activityTableBody');
             if (activities && activities.length > 0) {
                 tbody.innerHTML = activities.map(a => `
                     <tr class="activity-row" onclick="window.open('https://www.strava.com/activities/${a.id}', '_blank')">
                         <td class="activity-name">${a.name}</td>
-                        <td class="mono">${formatDate(a.start_date_local || a.start_date)}</td>
-                        <td class="mono highlight">${formatDistance(a.distance)}<span class="unit">km</span></td>
-                        <td class="mono">${formatTime(a.moving_time)}</td>
-                        <td class="mono">${formatPace(a.moving_time, a.distance)}<span class="unit">/km</span></td>
-                        <td class="mono">${Math.round(a.average_heartrate || 0)}<span class="unit">bpm</span></td>
-                        <td class="mono">${Math.round(a.suffer_score || 0)}</td>
-                        <td class="activity-chevron">></td>
+                        <td class="activity-metric">${formatDate(a.start_date_local || a.start_date)}</td>
+                        <td class="activity-metric">${formatDistance(a.distance)}<span class="unit">km</span></td>
+                        <td class="activity-metric">${formatTime(a.moving_time)}</td>
+                        <td class="activity-metric">${formatPace(a.moving_time, a.distance)}<span class="unit">/km</span></td>
+                        <td class="activity-metric">${Math.round(a.average_heartrate || 0)}<span class="unit">bpm</span></td>
+                        <td class="activity-metric">${Math.round(a.suffer_score || 0)}</td>
+                        <td class="activity-chevron">→</td>
                     </tr>
                 `).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ghost);padding:48px;">NO ACTIVITIES FOUND</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--silver-gray); padding: 48px;">No activities found</td></tr>';
             }
             
+            // Secondary Stats
             const allRide = stats.all_ride_totals || {};
             const recentRun = stats.recent_run_totals || {};
             
@@ -506,7 +1031,7 @@
                 </div>
                 <div class="stat-panel">
                     <div class="stat-panel-header">System Status</div>
-                    <div class="stat-row"><span class="stat-key">API Status</span><span class="stat-val" style="color: var(--burn-orange);">ONLINE</span></div>
+                    <div class="stat-row"><span class="stat-key">API Status</span><span class="stat-val stat-val-accent">ONLINE</span></div>
                     <div class="stat-row"><span class="stat-key">Last Sync</span><span class="stat-val">${new Date().toLocaleTimeString()}</span></div>
                     <div class="stat-row"><span class="stat-key">Data Source</span><span class="stat-val">STRAVA API</span></div>
                 </div>
@@ -564,9 +1089,7 @@
             localStorage.removeItem('strava_access_token');
             accessToken = null;
             athleteData = null;
-            document.getElementById('connectionStatus').style.display = 'none';
-            document.getElementById('disconnectBtn').style.display = 'none';
-            document.getElementById('athleteIdDisplay').textContent = '';
+            document.getElementById('headerStatus').style.display = 'none';
             document.getElementById('footerAthlete').textContent = 'Not connected';
             showScreen('oauthScreen');
         }
