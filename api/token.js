@@ -1,4 +1,4 @@
-// Vercel Edge Function for Strava token exchange
+// Vercel Edge Function for Strava token exchange and refresh
 // Keeps CLIENT_SECRET server-side for security
 
 export const config = {
@@ -36,26 +36,20 @@ export default async function handler(request) {
     );
   }
 
-  const { code, redirect_uri } = body;
+  const { code, redirect_uri, refresh_token, grant_type } = body;
 
-  console.log('[Token Exchange] Received request:', { code: code ? '***' + code.slice(-6) : null, redirect_uri });
+  // Determine the grant type
+  const effectiveGrantType = grant_type || (refresh_token ? 'refresh_token' : (code ? 'authorization_code' : null));
 
-  if (!code) {
+  if (!effectiveGrantType) {
     return new Response(
-      JSON.stringify({ error: 'Missing authorization code' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
-  if (!redirect_uri) {
-    return new Response(
-      JSON.stringify({ error: 'Missing redirect_uri' }),
+      JSON.stringify({ error: 'Missing grant_type or code/refresh_token' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
   // Get client secret from environment variable
-  const clientSecret = process.env.STRAVA_CLIENT_SECRET;
+  const clientSecret = (process.env.STRAVA_CLIENT_SECRET || '').trim();
   
   if (!clientSecret) {
     return new Response(
@@ -65,22 +59,57 @@ export default async function handler(request) {
   }
 
   try {
-    // Exchange code for token with Strava
-    // MUST include redirect_uri - must match exactly what was used in authorize request
-    const params = new URLSearchParams({
-      client_id: '225803',
-      client_secret: clientSecret,
-      code: code,
-      grant_type: 'authorization_code',
-      redirect_uri: redirect_uri
-    });
+    let params;
+    
+    if (effectiveGrantType === 'refresh_token') {
+      // Validate refresh token request
+      if (!refresh_token) {
+        return new Response(
+          JSON.stringify({ error: 'Missing refresh_token' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    console.log('[Token Exchange] Sending to Strava:', {
+      console.log('[Token Refresh] Refreshing access token');
+      
+      params = new URLSearchParams({
+        client_id: '225803',
+        client_secret: clientSecret,
+        refresh_token: refresh_token,
+        grant_type: 'refresh_token'
+      });
+    } else {
+      // Authorization code exchange
+      if (!code) {
+        return new Response(
+          JSON.stringify({ error: 'Missing authorization code' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (!redirect_uri) {
+        return new Response(
+          JSON.stringify({ error: 'Missing redirect_uri' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('[Token Exchange] Received request:', { code: code ? '***' + code.slice(-6) : null, redirect_uri });
+
+      params = new URLSearchParams({
+        client_id: '225803',
+        client_secret: clientSecret,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirect_uri
+      });
+    }
+
+    console.log(`[Token ${effectiveGrantType === 'refresh_token' ? 'Refresh' : 'Exchange'}] Sending to Strava:`, {
       client_id: '225803',
       client_secret: clientSecret ? '***' + clientSecret.slice(-4) : 'MISSING',
-      code: code ? '***' + code.slice(-6) : null,
-      grant_type: 'authorization_code',
-      redirect_uri: redirect_uri
+      grant_type: effectiveGrantType,
+      ...(effectiveGrantType === 'refresh_token' ? { refresh_token: refresh_token ? '***' + refresh_token.slice(-6) : null } : { code: code ? '***' + code.slice(-6) : null })
     });
 
     const stravaRes = await fetch('https://www.strava.com/oauth/token', {
@@ -91,15 +120,17 @@ export default async function handler(request) {
       body: params.toString()
     });
 
-    console.log('[Token Exchange] Strava response status:', stravaRes.status);
+    console.log(`[Token ${effectiveGrantType === 'refresh_token' ? 'Refresh' : 'Exchange'}] Strava response status:`, stravaRes.status);
 
     if (!stravaRes.ok) {
       const errorData = await stravaRes.json();
-      console.error('[Token Exchange] Strava error:', errorData);
+      console.error(`[Token ${effectiveGrantType === 'refresh_token' ? 'Refresh' : 'Exchange'}] Strava error:`, JSON.stringify(errorData));
+      console.error(`[Token Exchange] redirect_uri sent:`, redirect_uri);
       return new Response(
-        JSON.stringify({ 
-          error: errorData.message || 'Strava token exchange failed',
-          details: errorData.errors 
+        JSON.stringify({
+          error: errorData.message || `Strava token ${effectiveGrantType === 'refresh_token' ? 'refresh' : 'exchange'} failed`,
+          details: errorData.errors,
+          debug: { redirect_uri_received: redirect_uri, client_id: '225803' }
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -119,6 +150,7 @@ export default async function handler(request) {
     );
 
   } catch (error) {
+    console.error('[Token Handler] Error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', message: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

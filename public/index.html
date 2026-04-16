@@ -128,6 +128,8 @@
             max-width: min(1200px, 95vw);
             margin: 0 auto;
             padding: var(--space-5);
+            background: var(--surface-800);
+            min-height: 100vh;
         }
 
         @media (min-width: 480px) {
@@ -666,6 +668,13 @@
 
         .dashboard {
             display: none;
+            min-height: 100vh;
+            background: var(--surface-800);
+        }
+
+        .dashboard[style*="block"] {
+            display: block !important;
+            min-height: 100vh;
         }
 
         /* ============================================
@@ -684,6 +693,12 @@
             border-bottom: 1px solid var(--surface-600);
             margin: calc(-1 * var(--space-5));
             margin-bottom: var(--space-7);
+            width: calc(100% + var(--space-5) * 2);
+            box-sizing: border-box;
+            position: relative;
+            z-index: 100;
+            min-height: 60px;
+            isolation: isolate;
         }
 
         @media (min-width: 480px) {
@@ -691,6 +706,8 @@
                 padding: var(--space-4) var(--space-6);
                 margin: calc(-1 * var(--space-6));
                 margin-bottom: var(--space-7);
+                width: calc(100% + var(--space-6) * 2);
+                min-height: 64px;
             }
         }
 
@@ -700,6 +717,8 @@
                 padding: var(--space-5) var(--space-6);
                 margin: calc(-1 * var(--space-6));
                 margin-bottom: var(--space-8);
+                width: calc(100% + var(--space-6) * 2);
+                min-height: 68px;
             }
         }
 
@@ -825,6 +844,7 @@
             padding: var(--space-4);
             margin: 0 calc(-1 * var(--space-5));
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-menu.active {
@@ -1163,7 +1183,7 @@
         <div class="app-container">
             
             <!-- Header -->
-            <header class="header" style="position: relative;">
+            <header class="header">
                 <div class="header-brand">
                     <div class="header-logo">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1349,6 +1369,17 @@
         
         let accessToken = null;
         let athleteData = null;
+        let refreshTimer = null;
+
+        // Token storage keys
+        const STORAGE_KEYS = {
+            ACCESS_TOKEN: 'strava_access_token',
+            REFRESH_TOKEN: 'strava_refresh_token',
+            EXPIRES_AT: 'strava_expires_at'
+        };
+
+        // Token refresh buffer (refresh 5 minutes before expiry)
+        const REFRESH_BUFFER_SECONDS = 300;
 
         // UTILS
         const formatDistance = (m) => (m / 1000).toFixed(2);
@@ -1385,6 +1416,117 @@
             document.getElementById('oauthError').innerHTML = `<div class="error-message">${message}</div>`;
         }
 
+        // TOKEN MANAGEMENT
+        function saveTokens(tokenData) {
+            localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenData.access_token);
+            localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenData.refresh_token);
+            localStorage.setItem(STORAGE_KEYS.EXPIRES_AT, tokenData.expires_at.toString());
+        }
+
+        function loadTokens() {
+            return {
+                accessToken: localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
+                refreshToken: localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+                expiresAt: parseInt(localStorage.getItem(STORAGE_KEYS.EXPIRES_AT) || '0', 10)
+            };
+        }
+
+        function clearTokens() {
+            localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.EXPIRES_AT);
+        }
+
+        function getTimeUntilExpiry() {
+            const { expiresAt } = loadTokens();
+            if (!expiresAt) return null;
+            return expiresAt - Math.floor(Date.now() / 1000);
+        }
+
+        function needsRefresh() {
+            const timeUntilExpiry = getTimeUntilExpiry();
+            if (timeUntilExpiry === null) return false;
+            return timeUntilExpiry <= REFRESH_BUFFER_SECONDS;
+        }
+
+        function isTokenExpired() {
+            const timeUntilExpiry = getTimeUntilExpiry();
+            if (timeUntilExpiry === null) return true;
+            return timeUntilExpiry <= 0;
+        }
+
+        async function refreshAccessToken() {
+            const { refreshToken } = loadTokens();
+            
+            if (!refreshToken) {
+                throw new Error('No refresh token available');
+            }
+
+            console.log('[Token Refresh] Refreshing access token...');
+
+            const res = await fetch('/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    refresh_token: refreshToken,
+                    grant_type: 'refresh_token'
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Token refresh failed');
+            }
+
+            const tokenData = await res.json();
+            
+            // Update in-memory and storage
+            accessToken = tokenData.access_token;
+            saveTokens(tokenData);
+
+            console.log('[Token Refresh] Access token refreshed successfully');
+            
+            // Schedule next refresh
+            scheduleTokenRefresh();
+
+            return tokenData;
+        }
+
+        function scheduleTokenRefresh() {
+            // Clear existing timer
+            if (refreshTimer) {
+                clearTimeout(refreshTimer);
+                refreshTimer = null;
+            }
+
+            const timeUntilExpiry = getTimeUntilExpiry();
+            if (timeUntilExpiry === null) return;
+
+            // Calculate when to refresh (5 minutes before expiry, or immediately if already close)
+            const refreshIn = Math.max(0, (timeUntilExpiry - REFRESH_BUFFER_SECONDS) * 1000);
+            
+            console.log(`[Token Refresh] Scheduling refresh in ${Math.round(refreshIn / 1000)} seconds`);
+
+            refreshTimer = setTimeout(async () => {
+                try {
+                    await refreshAccessToken();
+                } catch (err) {
+                    console.error('[Token Refresh] Auto-refresh failed:', err);
+                    // If refresh fails, the next API call will handle the 401
+                }
+            }, refreshIn);
+        }
+
+        async function ensureValidToken() {
+            if (isTokenExpired()) {
+                console.log('[Token] Token expired, refreshing...');
+                await refreshAccessToken();
+            } else if (needsRefresh()) {
+                console.log('[Token] Token needs refresh, refreshing proactively...');
+                await refreshAccessToken();
+            }
+        }
+
         async function exchangeTokenViaProxy(code) {
             const res = await fetch('/api/token', {
                 method: 'POST',
@@ -1400,9 +1542,32 @@
         }
 
         async function apiGet(endpoint) {
+            // Ensure token is valid before making request
+            await ensureValidToken();
+
             const res = await fetch(`https://www.strava.com/api/v3${endpoint}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
+
+            // Handle 401 by attempting token refresh and retrying
+            if (res.status === 401) {
+                console.log('[API] Got 401, attempting token refresh...');
+                try {
+                    await refreshAccessToken();
+                    // Retry the request with new token
+                    const retryRes = await fetch(`https://www.strava.com/api/v3${endpoint}`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    if (!retryRes.ok) throw new Error(`API error: ${retryRes.status}`);
+                    return await retryRes.json();
+                } catch (refreshErr) {
+                    console.error('[API] Token refresh failed:', refreshErr);
+                    // Clear tokens and redirect to login
+                    disconnect();
+                    throw new Error('Session expired. Please reconnect.');
+                }
+            }
+
             if (!res.ok) throw new Error(`API error: ${res.status}`);
             return await res.json();
         }
@@ -1518,7 +1683,13 @@
                 try {
                     const tokenData = await exchangeTokenViaProxy(code);
                     accessToken = tokenData.access_token;
-                    localStorage.setItem('strava_access_token', accessToken);
+                    
+                    // Save all tokens including refresh_token and expires_at
+                    saveTokens(tokenData);
+                    
+                    // Schedule auto-refresh
+                    scheduleTokenRefresh();
+                    
                     window.history.replaceState({}, document.title, window.location.pathname);
                     await loadDashboard();
                 } catch (err) {
@@ -1533,6 +1704,9 @@
             setLoadingText('Fetching athlete data...');
             
             try {
+                // Ensure we have a valid token before loading
+                await ensureValidToken();
+                
                 const profile = await apiGet('/athlete');
                 athleteData = profile;
                 setLoadingText('Loading activities...');
@@ -1541,15 +1715,26 @@
                 const stats = await apiGet(`/athletes/${profile.id}/stats`);
                 renderDashboard(profile, activities, stats);
                 showScreen('dashboard');
+                
+                // Ensure refresh is scheduled (in case it wasn't already)
+                scheduleTokenRefresh();
             } catch (err) {
                 showScreen('oauthScreen');
                 showError('Failed to load data: ' + err.message);
-                localStorage.removeItem('strava_access_token');
+                clearTokens();
             }
         }
 
         function disconnect() {
-            localStorage.removeItem('strava_access_token');
+            // Clear refresh timer
+            if (refreshTimer) {
+                clearTimeout(refreshTimer);
+                refreshTimer = null;
+            }
+            
+            // Clear all tokens
+            clearTokens();
+            
             accessToken = null;
             athleteData = null;
             document.getElementById('headerStatus').style.display = 'none';
@@ -1620,10 +1805,31 @@
                 return;
             }
             
-            const savedToken = localStorage.getItem('strava_access_token');
-            if (savedToken) {
-                accessToken = savedToken;
+            const tokens = loadTokens();
+            if (tokens.accessToken && tokens.refreshToken) {
+                accessToken = tokens.accessToken;
+                
+                // Check if token is expired or needs refresh
+                if (isTokenExpired()) {
+                    console.log('[Init] Token expired, refreshing before loading dashboard...');
+                    try {
+                        await refreshAccessToken();
+                    } catch (err) {
+                        console.error('[Init] Token refresh failed:', err);
+                        disconnect();
+                        return;
+                    }
+                } else {
+                    // Token is valid, schedule refresh for later
+                    scheduleTokenRefresh();
+                }
+                
                 await loadDashboard();
+            } else if (tokens.accessToken && !tokens.refreshToken) {
+                // Old token format without refresh token - clear and require re-auth
+                console.log('[Init] Old token format detected, clearing and requiring re-auth');
+                clearTokens();
+                showScreen('oauthScreen');
             } else {
                 showScreen('oauthScreen');
             }
