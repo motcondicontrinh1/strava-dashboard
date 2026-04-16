@@ -49,7 +49,7 @@ export default async function handler(request) {
   }
 
   // Get client secret from environment variable
-  const clientSecret = process.env.STRAVA_CLIENT_SECRET;
+  const clientSecret = (process.env.STRAVA_CLIENT_SECRET || '').trim();
   
   if (!clientSecret) {
     return new Response(
@@ -124,11 +124,13 @@ export default async function handler(request) {
 
     if (!stravaRes.ok) {
       const errorData = await stravaRes.json();
-      console.error(`[Token ${effectiveGrantType === 'refresh_token' ? 'Refresh' : 'Exchange'}] Strava error:`, errorData);
+      console.error(`[Token ${effectiveGrantType === 'refresh_token' ? 'Refresh' : 'Exchange'}] Strava error:`, JSON.stringify(errorData));
+      console.error(`[Token Exchange] redirect_uri sent:`, redirect_uri);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: errorData.message || `Strava token ${effectiveGrantType === 'refresh_token' ? 'refresh' : 'exchange'} failed`,
-          details: errorData.errors 
+          details: errorData.errors,
+          debug: { redirect_uri_received: redirect_uri, client_id: '225803' }
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

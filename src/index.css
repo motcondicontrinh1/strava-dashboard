@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Scan line overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* Metric card brutalist hover */
+.metric-card {
+  @apply bg-void-2 border border-white/[0.08] p-8 relative overflow-hidden transition-all duration-300 cursor-default;
+}
+.metric-card::before {
+  content: "";
+  @apply absolute top-0 left-0 right-0 h-px opacity-0 transition-opacity duration-300;
+  background: linear-gradient(90deg, transparent, #FC4C02, transparent);
+}
+.metric-card:hover {
+  @apply border-white/[0.12] shadow-brutalist;
+}
+.metric-card:hover::before {
+  @apply opacity-100;
+}
+
+/* Activity table row hover */
+.activity-row td {
+  @apply transition-all duration-200;
+}
+.activity-row:hover td {
+  background: rgba(252, 76, 2, 0.08);
+  @apply border-b border-white/[0.08];
+}
+.activity-chevron {
+  @apply font-mono text-xs text-white/50 opacity-0 transition-all duration-200;
+}
+.activity-row:hover .activity-chevron {
+  @apply opacity-100 text-orange;
+  transform: translateX(4px);
+}
