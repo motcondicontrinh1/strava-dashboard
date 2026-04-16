@@ -774,6 +774,98 @@
         }
 
         /* ============================================
+           MOBILE HAMBURGER MENU
+           ============================================ */
+
+        .hamburger-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            gap: 5px;
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-200);
+            border-radius: 1px;
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface-700);
+            border: 1px solid var(--surface-600);
+            border-top: none;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            padding: var(--space-4);
+            margin: 0 calc(-1 * var(--space-5));
+            z-index: 100;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--surface-600);
+            min-height: 44px;
+        }
+
+        .mobile-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu-label {
+            font-size: var(--text-sm);
+            color: var(--text-300);
+        }
+
+        .mobile-menu-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--text-xs);
+            color: var(--text-400);
+        }
+
+        @media (min-width: 768px) {
+            .hamburger-btn {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: none !important;
+            }
+        }
+
+        /* ============================================
            FOOTER
            Clean, minimal, proper contrast
            ============================================ */
@@ -1071,7 +1163,7 @@
         <div class="app-container">
             
             <!-- Header -->
-            <header class="header">
+            <header class="header" style="position: relative;">
                 <div class="header-brand">
                     <div class="header-logo">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1080,13 +1172,40 @@
                     </div>
                     <span class="header-title">Dashboard</span>
                 </div>
-                <div class="header-actions">
+                
+                <!-- Desktop Header Actions -->
+                <div class="header-actions" id="desktopHeaderActions" style="display: none;">
                     <div class="header-status" id="headerStatus" style="display: none;">
                         <span class="status-dot"></span>
                         <span>Live</span>
                     </div>
                     <span id="athleteIdDisplay" style="display: none; font-family: 'JetBrains Mono', monospace; font-size: var(--text-xs); color: var(--text-500);"></span>
                     <button class="btn btn-ghost btn-small" id="disconnectBtn" style="display: none;" onclick="disconnect()">Disconnect</button>
+                </div>
+                
+                <!-- Mobile Hamburger Button -->
+                <button class="hamburger-btn" id="hamburgerBtn" style="display: none;" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <!-- Mobile Menu -->
+                <div class="mobile-menu" id="mobileMenu">
+                    <div class="mobile-menu-item">
+                        <span class="mobile-menu-label">Status</span>
+                        <div class="header-status" style="display: flex;">
+                            <span class="status-dot"></span>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-size: var(--text-xs); text-transform: uppercase; color: var(--text-400);">Live</span>
+                        </div>
+                    </div>
+                    <div class="mobile-menu-item">
+                        <span class="mobile-menu-label">Athlete ID</span>
+                        <span class="mobile-menu-value" id="mobileAthleteId">--</span>
+                    </div>
+                    <div class="mobile-menu-item">
+                        <button class="btn btn-ghost btn-small" onclick="disconnect()" style="width: 100%;">Disconnect</button>
+                    </div>
                 </div>
             </header>
 
@@ -1296,9 +1415,20 @@
             document.getElementById('access').textContent = profile.summit ? 'SUMMIT' : 'STANDARD';
             document.getElementById('memberSince').textContent = `Athlete Profile // ${new Date(profile.created_at).getFullYear()}`;
             document.getElementById('athleteIdDisplay').textContent = `ID: ${profile.id}`;
-            document.getElementById('headerStatus').style.display = 'flex';
-            document.getElementById('athleteIdDisplay').style.display = 'inline';
-            document.getElementById('disconnectBtn').style.display = 'inline-flex';
+            document.getElementById('mobileAthleteId').textContent = profile.id;
+            
+            // Show appropriate header based on viewport
+            if (window.innerWidth >= 768) {
+                document.getElementById('desktopHeaderActions').style.display = 'flex';
+                document.getElementById('headerStatus').style.display = 'flex';
+                document.getElementById('athleteIdDisplay').style.display = 'inline';
+                document.getElementById('disconnectBtn').style.display = 'inline-flex';
+                document.getElementById('hamburgerBtn').style.display = 'none';
+            } else {
+                document.getElementById('desktopHeaderActions').style.display = 'none';
+                document.getElementById('hamburgerBtn').style.display = 'flex';
+            }
+            
             document.getElementById('footerAthlete').textContent = `${profile.firstname.toUpperCase()} ${profile.lastname.toUpperCase()} // ID ${profile.id}`;
             document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
             
@@ -1425,9 +1555,64 @@
             document.getElementById('headerStatus').style.display = 'none';
             document.getElementById('athleteIdDisplay').style.display = 'none';
             document.getElementById('disconnectBtn').style.display = 'none';
+            document.getElementById('hamburgerBtn').style.display = 'none';
+            document.getElementById('desktopHeaderActions').style.display = 'none';
+            closeMobileMenu();
             document.getElementById('footerAthlete').textContent = 'Not connected';
             showScreen('oauthScreen');
         }
+
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            if (menu.classList.contains('active')) {
+                closeMobileMenu();
+            } else {
+                menu.classList.add('active');
+                btn.classList.add('active');
+            }
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('hamburgerBtn');
+            menu.classList.remove('active');
+            btn.classList.remove('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            if (menu && menu.classList.contains('active')) {
+                if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                    closeMobileMenu();
+                }
+            }
+        });
+
+        // Handle window resize to show correct header
+        window.addEventListener('resize', function() {
+            if (athleteData) {
+                if (window.innerWidth >= 768) {
+                    document.getElementById('desktopHeaderActions').style.display = 'flex';
+                    document.getElementById('headerStatus').style.display = 'flex';
+                    document.getElementById('athleteIdDisplay').style.display = 'inline';
+                    document.getElementById('disconnectBtn').style.display = 'inline-flex';
+                    document.getElementById('hamburgerBtn').style.display = 'none';
+                    closeMobileMenu();
+                } else {
+                    document.getElementById('desktopHeaderActions').style.display = 'none';
+                    document.getElementById('headerStatus').style.display = 'none';
+                    document.getElementById('athleteIdDisplay').style.display = 'none';
+                    document.getElementById('disconnectBtn').style.display = 'none';
+                    document.getElementById('hamburgerBtn').style.display = 'flex';
+                }
+            }
+        });
 
         async function init() {
             if (window.location.search.includes('code=')) {
