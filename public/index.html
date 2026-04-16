@@ -696,8 +696,9 @@
             width: calc(100% + var(--space-5) * 2);
             box-sizing: border-box;
             position: relative;
-            z-index: 10;
+            z-index: 100;
             min-height: 60px;
+            isolation: isolate;
         }
 
         @media (min-width: 480px) {
@@ -843,6 +844,7 @@
             padding: var(--space-4);
             margin: 0 calc(-1 * var(--space-5));
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-menu.active {
@@ -1181,7 +1183,7 @@
         <div class="app-container">
             
             <!-- Header -->
-            <header class="header" style="position: relative;">
+            <header class="header">
                 <div class="header-brand">
                     <div class="header-logo">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
