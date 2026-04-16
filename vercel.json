@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/token",
+      "destination": "/api/token.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/index.html"
+    }
+  ]
+}
