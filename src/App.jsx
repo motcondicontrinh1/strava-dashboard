@@ -3,6 +3,10 @@ import Header from './components/Header.jsx';
 import OAuthScreen from './components/OAuthScreen.jsx';
 import LoadingScreen from './components/LoadingScreen.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import {
+  DEMO_PROFILE, DEMO_ACTIVITY_SUMMARY, DEMO_ACTIVITY_DETAIL,
+  DEMO_STATS, DEMO_STREAMS,
+} from './dummyData.js';
 
 const ActivityDrawer = lazy(() => import('./components/ActivityDrawer.jsx'));
 import {
@@ -11,6 +15,8 @@ import {
   exchangeTokenViaProxy, refreshTokenViaProxy,
   REFRESH_BUFFER,
 } from './utils/auth.js';
+
+const IS_DEMO = new URLSearchParams(window.location.search).has('demo');
 
 export default function App() {
   const [screen, setScreen] = useState('oauth');
@@ -66,6 +72,14 @@ export default function App() {
   // ── API ──────────────────────────────────────────────────────────────────────
 
   const apiGet = useCallback(async (endpoint) => {
+    if (IS_DEMO) {
+      if (endpoint === '/athlete') return DEMO_PROFILE;
+      if (endpoint.startsWith('/athlete/activities')) return [DEMO_ACTIVITY_SUMMARY];
+      if (endpoint.startsWith(`/athletes/${DEMO_PROFILE.id}/stats`)) return DEMO_STATS;
+      if (endpoint.match(/\/activities\/\d+\/streams/)) return DEMO_STREAMS;
+      if (endpoint.match(/\/activities\/\d+/)) return DEMO_ACTIVITY_DETAIL;
+      return {};
+    }
     await ensureValidToken();
     const res = await fetch(`https://www.strava.com/api/v3${endpoint}`, {
       headers: { Authorization: `Bearer ${accessTokenRef.current}` },
@@ -140,6 +154,16 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
+      // Demo mode — skip auth entirely
+      if (IS_DEMO) {
+        setProfile(DEMO_PROFILE);
+        setActivities([DEMO_ACTIVITY_SUMMARY]);
+        setStats(DEMO_STATS);
+        setHasMoreActivities(false);
+        setScreen('dashboard');
+        return;
+      }
+
       // OAuth callback
       if (window.location.search.includes('code=')) {
         const params = new URLSearchParams(window.location.search);
