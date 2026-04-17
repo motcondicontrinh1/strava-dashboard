@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header.jsx';
 import OAuthScreen from './components/OAuthScreen.jsx';
 import LoadingScreen from './components/LoadingScreen.jsx';
 import Dashboard from './components/Dashboard.jsx';
+
+const ActivityDrawer = lazy(() => import('./components/ActivityDrawer.jsx'));
 import {
   saveTokens, loadTokens, clearTokens,
   isTokenExpired, needsRefresh, getTimeUntilExpiry,
@@ -17,9 +19,14 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [activities, setActivities] = useState([]);
   const [stats, setStats] = useState(null);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreActivities, setHasMoreActivities] = useState(true);
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
 
   const accessTokenRef = useRef(null);
   const refreshTimerRef = useRef(null);
+  const ACTIVITIES_PER_PAGE = 10;
 
   // ── Token refresh ────────────────────────────────────────────────────────────
 
@@ -83,11 +90,13 @@ export default function App() {
     try {
       const p = await apiGet('/athlete');
       setLoadingText('Loading activities...');
-      const a = await apiGet('/athlete/activities?per_page=5');
+      const a = await apiGet(`/athlete/activities?per_page=${ACTIVITIES_PER_PAGE}&page=1`);
       setLoadingText('Compiling statistics...');
       const s = await apiGet(`/athletes/${p.id}/stats`);
       setProfile(p);
       setActivities(a);
+      setHasMoreActivities(a.length === ACTIVITIES_PER_PAGE);
+      setActivitiesPage(1);
       setStats(s);
       setScreen('dashboard');
     } catch (err) {
@@ -96,7 +105,23 @@ export default function App() {
       clearTokens();
       accessTokenRef.current = null;
     }
-  }, [apiGet]);
+  }, [apiGet]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadMoreActivities = useCallback(async () => {
+    if (loadingMore || !hasMoreActivities) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = activitiesPage + 1;
+      const more = await apiGet(`/athlete/activities?per_page=${ACTIVITIES_PER_PAGE}&page=${nextPage}`);
+      setActivities(prev => [...prev, ...more]);
+      setActivitiesPage(nextPage);
+      setHasMoreActivities(more.length === ACTIVITIES_PER_PAGE);
+    } catch (err) {
+      console.error('[LoadMore] Failed:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [apiGet, activitiesPage, loadingMore, hasMoreActivities]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Disconnect ───────────────────────────────────────────────────────────────
 
@@ -175,6 +200,7 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
+    <>
     <div className="bg-void text-white min-h-screen overflow-x-hidden font-sans">
       {/* Ambient glow blobs */}
       <div
@@ -200,10 +226,29 @@ export default function App() {
           {screen === 'oauth' && <OAuthScreen error={error} />}
           {screen === 'loading' && <LoadingScreen text={loadingText} />}
           {screen === 'dashboard' && (
-            <Dashboard profile={profile} activities={activities} stats={stats} />
+            <Dashboard
+              profile={profile}
+              activities={activities}
+              stats={stats}
+              onLoadMore={loadMoreActivities}
+              loadingMore={loadingMore}
+              hasMoreActivities={hasMoreActivities}
+              onSelectActivity={setSelectedActivityId}
+            />
           )}
         </main>
       </div>
     </div>
+
+    {selectedActivityId && (
+      <Suspense fallback={null}>
+        <ActivityDrawer
+          activityId={selectedActivityId}
+          apiGet={apiGet}
+          onClose={() => setSelectedActivityId(null)}
+        />
+      </Suspense>
+    )}
+    </>
   );
 }
