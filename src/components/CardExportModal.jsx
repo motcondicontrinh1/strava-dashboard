@@ -6,20 +6,28 @@ const FORMATS = [
   { id: 'story', label: 'Story', sub: '1080 × 1920', icon: '▮' },
 ];
 
+const LAYOUTS = [
+  { id: 'classic', label: 'Classic', desc: 'Clean & minimal' },
+  { id: 'brutalist', label: 'Brutalist', desc: 'Bold grid architecture' },
+  { id: 'kinetic', label: 'Kinetic', desc: 'Dynamic & overlapping' },
+  { id: 'typography', label: 'Typography', desc: 'Type-driven poster' },
+];
+
 export default function CardExportModal({ activity, onClose }) {
   const [format, setFormat] = useState('square');
+  const [layout, setLayout] = useState('classic');
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const canvasRef = useRef(null);
   const previewRef = useRef(null);
 
-  // Generate preview whenever format changes
+  // Generate preview whenever format or layout changes
   useEffect(() => {
     let cancelled = false;
     async function render() {
       setGenerating(true);
       try {
-        const canvas = await generateActivityCard(activity, format);
+        const canvas = await generateActivityCard(activity, format, layout);
         if (cancelled) return;
         canvasRef.current = canvas;
 
@@ -36,8 +44,8 @@ export default function CardExportModal({ activity, onClose }) {
       }
     }
     render();
-    return () => { cancelled = true; };
-  }, [format, activity]);
+    return () => { cancelled = true };
+  }, [format, layout, activity]);
 
   // ESC key
   useEffect(() => {
@@ -51,7 +59,7 @@ export default function CardExportModal({ activity, onClose }) {
     setDownloading(true);
     const slug = (activity.name || 'activity').replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const date = (activity.start_date_local || '').slice(0, 10);
-    downloadCanvas(canvasRef.current, `${slug}_${date}_${format}.png`);
+    downloadCanvas(canvasRef.current, `${slug}_${date}_${format}_${layout}.png`);
     setTimeout(() => setDownloading(false), 1200);
   }
 
@@ -190,6 +198,40 @@ export default function CardExportModal({ activity, onClose }) {
                       </div>
                       {format === f.id && (
                         <div className="ml-auto">
+                          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                            <path d="M1 3L3 5L7 1" stroke="#FC4C02" strokeWidth="1.2" strokeLinecap="square"/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Layout selector */}
+              <div className="mb-8">
+                <div className="font-mono text-[8px] text-white/30 uppercase tracking-widest mb-3">
+                  Layout Style
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {LAYOUTS.map(l => (
+                    <button
+                      key={l.id}
+                      onClick={() => setLayout(l.id)}
+                      className={`relative flex flex-col gap-1 px-3 py-3 border transition-colors text-left ${
+                        layout === l.id
+                          ? 'border-orange/50 bg-orange/[0.08]'
+                          : 'border-white/[0.06] hover:border-white/20'
+                      }`}
+                    >
+                      <div className={`font-mono text-[10px] uppercase tracking-wider ${layout === l.id ? 'text-orange' : 'text-white/50'}`}>
+                        {l.label}
+                      </div>
+                      <div className="font-mono text-[8px] text-white/25">
+                        {l.desc}
+                      </div>
+                      {layout === l.id && (
+                        <div className="absolute top-2 right-2">
                           <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
                             <path d="M1 3L3 5L7 1" stroke="#FC4C02" strokeWidth="1.2" strokeLinecap="square"/>
                           </svg>
