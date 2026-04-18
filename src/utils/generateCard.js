@@ -735,10 +735,10 @@ function drawTypographyCard(ctx, activity, routePoints, W, H) {
   ctx.fillStyle = ORANGE;
   ctx.fillRect(60, 640, 160, 4);
   
-  // Route - subtle background element
-  const routeArea = { x: W * 0.4, y: 400, w: W * 0.55, h: 400 };
+  // Route - positioned lower to avoid overlapping text
+  const routeArea = { x: W * 0.45, y: 680, w: W * 0.50, h: 350 };
   ctx.save();
-  ctx.globalAlpha = 0.4;
+  ctx.globalAlpha = 0.35;
   if (routePoints.length) {
     const t = getRouteTransform(routePoints, routeArea);
     drawRoute(ctx, routePoints, t);
