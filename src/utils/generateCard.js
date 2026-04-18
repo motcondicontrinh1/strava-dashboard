@@ -78,7 +78,7 @@ function drawRoute(ctx, points, transform) {
   // Outer stroke — thick glow effect, creates visible weight on any background
   ctx.save();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 28;  // 200% thicker (was 14)
+  ctx.lineWidth = 50;  // Extra thick for sticker effect (was 14)
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.globalAlpha = 0.25;
@@ -89,35 +89,35 @@ function drawRoute(ctx, points, transform) {
   // Main route line — solid, bold
   ctx.save();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 18;  // 200% thicker (was 9)
+  ctx.lineWidth = 35;  // Extra thick for sticker effect (was 9)
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   tracePath(ctx, points, transform);
   ctx.stroke();
   ctx.restore();
 
-  // Start marker — orange filled dot with ring (scaled 200%)
+  // Start marker — orange filled dot with ring (extra large for sticker effect)
   const sx = transform.toX(points[0][1]), sy = transform.toY(points[0][0]);
   ctx.save();
   ctx.fillStyle = '#FC4C02';
   ctx.beginPath();
-  ctx.arc(sx, sy, 28, 0, Math.PI * 2);  // 200% larger (was 14)
+  ctx.arc(sx, sy, 40, 0, Math.PI * 2);  // Extra large (was 14)
   ctx.fill();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 6;  // 200% thicker (was 3)
+  ctx.lineWidth = 10;  // Extra thick (was 3)
   ctx.globalAlpha = 0.4;
   ctx.beginPath();
-  ctx.arc(sx, sy, 48, 0, Math.PI * 2);  // 200% larger (was 24)
+  ctx.arc(sx, sy, 70, 0, Math.PI * 2);  // Extra large (was 24)
   ctx.stroke();
   ctx.restore();
 
-  // End marker — white dot (scaled 200%)
+  // End marker — white dot (extra large for sticker effect)
   const ex = transform.toX(points[points.length - 1][1]);
   const ey = transform.toY(points[points.length - 1][0]);
   ctx.save();
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.arc(ex, ey, 20, 0, Math.PI * 2);  // 200% larger (was 10)
+  ctx.arc(ex, ey, 30, 0, Math.PI * 2);  // Extra large (was 10)
   ctx.fill();
   ctx.restore();
 }
