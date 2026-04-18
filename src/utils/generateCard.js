@@ -78,7 +78,7 @@ function drawRoute(ctx, points, transform) {
   // Outer stroke — thick glow effect, creates visible weight on any background
   ctx.save();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 50;  // Extra thick for sticker effect (was 14)
+  ctx.lineWidth = 25;  // Reduced thickness
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.globalAlpha = 0.25;
@@ -89,7 +89,7 @@ function drawRoute(ctx, points, transform) {
   // Main route line — solid, bold
   ctx.save();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 35;  // Extra thick for sticker effect (was 9)
+  ctx.lineWidth = 18;  // Reduced thickness
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   tracePath(ctx, points, transform);
@@ -101,13 +101,13 @@ function drawRoute(ctx, points, transform) {
   ctx.save();
   ctx.fillStyle = '#FC4C02';
   ctx.beginPath();
-  ctx.arc(sx, sy, 40, 0, Math.PI * 2);  // Extra large (was 14)
+  ctx.arc(sx, sy, 20, 0, Math.PI * 2);  // Reduced size
   ctx.fill();
   ctx.strokeStyle = '#FC4C02';
-  ctx.lineWidth = 10;  // Extra thick (was 3)
+  ctx.lineWidth = 5;  // Reduced thickness
   ctx.globalAlpha = 0.4;
   ctx.beginPath();
-  ctx.arc(sx, sy, 70, 0, Math.PI * 2);  // Extra large (was 24)
+  ctx.arc(sx, sy, 35, 0, Math.PI * 2);  // Reduced size
   ctx.stroke();
   ctx.restore();
 
@@ -117,7 +117,7 @@ function drawRoute(ctx, points, transform) {
   ctx.save();
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.arc(ex, ey, 30, 0, Math.PI * 2);  // Extra large (was 10)
+  ctx.arc(ex, ey, 15, 0, Math.PI * 2);  // Reduced size
   ctx.fill();
   ctx.restore();
 }
@@ -146,6 +146,25 @@ function drawOrangeRule(ctx, x, y, w) {
   ctx.fillStyle = '#FC4C02';
   ctx.fillRect(x, y, w * 0.08, 2.5);
   ctx.restore();
+}
+
+// ── Transparent chessboard background ─────────────────────────────────────
+
+function drawChessboardBackground(ctx, W, H) {
+  const squareSize = 20;
+  const lightColor = 'rgba(255,255,255,0.03)';
+  const darkColor = 'rgba(0,0,0,0)';
+  
+  // Transparent chessboard background
+  
+  // Draw chessboard pattern
+  for (let y = 0; y < H; y += squareSize) {
+    for (let x = 0; x < W; x += squareSize) {
+      const isLight = ((x / squareSize) + (y / squareSize)) % 2 === 0;
+      ctx.fillStyle = isLight ? lightColor : darkColor;
+      ctx.fillRect(x, y, squareSize, squareSize);
+    }
+  }
 }
 
 // ── Corner marks ─────────────────────────────────────────────────────────────
@@ -177,7 +196,7 @@ function drawCornerMarks(ctx, W, H, inset) {
 // ── Square layout ────────────────────────────────────────────────────────────
 
 function drawSquareCard(ctx, activity, routePoints, W, H) {
-  ctx.clearRect(0, 0, W, H);
+  drawChessboardBackground(ctx, W, H);
 
   const PAD = 64;
   const INSET = PAD - 16;
@@ -274,7 +293,7 @@ function drawSquareCard(ctx, activity, routePoints, W, H) {
 // ── Story layout ─────────────────────────────────────────────────────────────
 
 function drawStoryCard(ctx, activity, routePoints, W, H) {
-  ctx.clearRect(0, 0, W, H);
+  drawChessboardBackground(ctx, W, H);
 
   const PAD = 64;
   const INSET = PAD - 16;
@@ -389,16 +408,12 @@ function drawStoryCard(ctx, activity, routePoints, W, H) {
 // Heavy typography, aggressive grid, architectural precision
 
 function drawBrutalistCard(ctx, activity, routePoints, W, H) {
-  ctx.clearRect(0, 0, W, H);
+  drawChessboardBackground(ctx, W, H);
   
   const PAD = 80;
   const GRID_GAP = 4;
   const DARK = '#0a0a0a';
   const ORANGE = '#FC4C02';
-  
-  // Background with subtle grain texture simulation
-  ctx.fillStyle = DARK;
-  ctx.fillRect(0, 0, W, H);
   
   // Brutalist grid lines
   ctx.strokeStyle = 'rgba(252,76,2,0.15)';
@@ -531,15 +546,11 @@ function drawBrutalistCard(ctx, activity, routePoints, W, H) {
 // Dynamic overlapping elements, motion blur aesthetic, depth through layers
 
 function drawKineticCard(ctx, activity, routePoints, W, H) {
-  ctx.clearRect(0, 0, W, H);
+  drawChessboardBackground(ctx, W, H);
   
   const ORANGE = '#FC4C02';
   const dist = ((activity.distance || 0) / 1000).toFixed(2);
   const pace = activity.average_speed > 0 ? formatPaceSec(1000 / activity.average_speed) : '—';
-  
-  // Dynamic diagonal background
-  ctx.fillStyle = '#0f0f0f';
-  ctx.fillRect(0, 0, W, H);
   
   // Diagonal orange accent bar
   ctx.save();
@@ -661,15 +672,11 @@ function drawKineticCard(ctx, activity, routePoints, W, H) {
 // Massive type-driven design, Swiss style precision, hierarchy through scale
 
 function drawTypographyCard(ctx, activity, routePoints, W, H) {
-  ctx.clearRect(0, 0, W, H);
+  drawChessboardBackground(ctx, W, H);
   
   const ORANGE = '#FC4C02';
   const dist = ((activity.distance || 0) / 1000).toFixed(2);
   const pace = activity.average_speed > 0 ? formatPaceSec(1000 / activity.average_speed) : '—';
-  
-  // Background
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, W, H);
   
   // Typography hierarchy:
   // 1. Massive activity type
