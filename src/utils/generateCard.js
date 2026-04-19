@@ -151,21 +151,8 @@ function drawOrangeRule(ctx, x, y, w) {
 // ── Transparent chessboard background ─────────────────────────────────────
 
 function drawChessboardBackground(ctx, W, H) {
-  const squareSize = 20;
-  const lightColor = 'rgba(255,255,255,0.06)'; // Slightly more visible
-  const darkColor = 'rgba(255,255,255,0)';     // Fully transparent
-  
-  // Clear to fully transparent first
+  // Clear to fully transparent - no pattern, just pure transparency
   ctx.clearRect(0, 0, W, H);
-  
-  // Draw chessboard pattern for visual transparency indicator
-  for (let y = 0; y < H; y += squareSize) {
-    for (let x = 0; x < W; x += squareSize) {
-      const isLight = ((x / squareSize) + (y / squareSize)) % 2 === 0;
-      ctx.fillStyle = isLight ? lightColor : darkColor;
-      ctx.fillRect(x, y, squareSize, squareSize);
-    }
-  }
 }
 
 // ── Corner marks ─────────────────────────────────────────────────────────────
