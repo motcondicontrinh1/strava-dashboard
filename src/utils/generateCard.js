@@ -152,12 +152,13 @@ function drawOrangeRule(ctx, x, y, w) {
 
 function drawChessboardBackground(ctx, W, H) {
   const squareSize = 20;
-  const lightColor = 'rgba(255,255,255,0.03)';
-  const darkColor = 'rgba(0,0,0,0)';
+  const lightColor = 'rgba(255,255,255,0.06)'; // Slightly more visible
+  const darkColor = 'rgba(255,255,255,0)';     // Fully transparent
   
-  // Transparent chessboard background
+  // Clear to fully transparent first
+  ctx.clearRect(0, 0, W, H);
   
-  // Draw chessboard pattern
+  // Draw chessboard pattern for visual transparency indicator
   for (let y = 0; y < H; y += squareSize) {
     for (let x = 0; x < W; x += squareSize) {
       const isLight = ((x / squareSize) + (y / squareSize)) % 2 === 0;
@@ -824,7 +825,8 @@ export async function generateActivityCard(activity, format = 'square', layout =
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
   canvas.height = H * SCALE;
-  const ctx = canvas.getContext('2d');
+  // Enable transparency
+  const ctx = canvas.getContext('2d', { alpha: true });
   ctx.scale(SCALE, SCALE);
 
   await document.fonts.ready;
