@@ -442,8 +442,8 @@ function drawBrutalistCard(ctx, activity, routePoints, W, H) {
     drawRoute(ctx, routePoints, t);
   }
   
-  // Heavy black bar at bottom for stats
-  const BAR_HEIGHT = 280;
+  // Heavy black bar at bottom for stats - taller to prevent overlap
+  const BAR_HEIGHT = 340;
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, H - BAR_HEIGHT, W, BAR_HEIGHT);
   
@@ -451,22 +451,22 @@ function drawBrutalistCard(ctx, activity, routePoints, W, H) {
   ctx.fillStyle = ORANGE;
   ctx.fillRect(PAD, H - BAR_HEIGHT, 8, BAR_HEIGHT);
   
-  // Activity name - massive, clipped
+  // Activity name - smaller and positioned higher to avoid overlap
   ctx.save();
-  ctx.font = `700 72px "Space Grotesk", sans-serif`;
+  ctx.font = `700 48px "Space Grotesk", sans-serif`;
   ctx.fillStyle = '#ffffff';
   ctx.textBaseline = 'alphabetic';
   const name = activity.name || 'ACTIVITY';
   // Clip to available space
   let displayName = name;
-  while (ctx.measureText(displayName + '…').width > W - PAD * 2 - 20 && displayName.length > 3) {
+  while (ctx.measureText(displayName + '…').width > W - PAD * 2 - 40 && displayName.length > 3) {
     displayName = displayName.slice(0, -1);
   }
   if (displayName !== name) displayName += '…';
-  ctx.fillText(displayName.toUpperCase(), PAD + 20, H - BAR_HEIGHT + 80);
+  ctx.fillText(displayName.toUpperCase(), PAD + 20, H - BAR_HEIGHT + 60);
   ctx.restore();
   
-  // Stats in brutalist blocks
+  // Stats in brutalist blocks - 2x2 grid layout to prevent overlap
   const pace = activity.average_speed > 0 ? formatPaceSec(1000 / activity.average_speed) : '—';
   const stats = [
     { val: dist, unit: 'KM', sub: 'DISTANCE' },
@@ -478,23 +478,31 @@ function drawBrutalistCard(ctx, activity, routePoints, W, H) {
     stats.push({ val: Math.round(activity.average_heartrate).toString(), unit: 'BPM', sub: 'HEART RATE' });
   }
   
-  const blockWidth = (W - PAD * 2) / stats.length;
+  // Use 2-column grid for stats to prevent overlapping
+  const cols = 2;
+  const rows = Math.ceil(stats.length / cols);
+  const cellWidth = (W - PAD * 2) / cols;
+  const cellHeight = 100;
+  const startY = H - BAR_HEIGHT + 100;
+  
   stats.forEach((stat, i) => {
-    const x = PAD + i * blockWidth;
-    const y = H - 140;
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = PAD + col * cellWidth;
+    const y = startY + row * cellHeight;
     
     // Value
     ctx.save();
-    ctx.font = `700 84px "JetBrains Mono", monospace`;
+    ctx.font = `700 64px "JetBrains Mono", monospace`;
     ctx.fillStyle = '#ffffff';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(stat.val, x + 20, y);
     ctx.restore();
     
-    // Unit
+    // Unit (inline with value)
     if (stat.unit) {
       ctx.save();
-      ctx.font = `500 32px "JetBrains Mono", monospace`;
+      ctx.font = `500 28px "JetBrains Mono", monospace`;
       ctx.fillStyle = ORANGE;
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(stat.unit, x + 20 + ctx.measureText(stat.val).width + 8, y);
@@ -503,10 +511,10 @@ function drawBrutalistCard(ctx, activity, routePoints, W, H) {
     
     // Label
     ctx.save();
-    ctx.font = `500 18px "JetBrains Mono", monospace`;
+    ctx.font = `500 16px "JetBrains Mono", monospace`;
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(stat.sub, x + 20, y + 40);
+    ctx.fillText(stat.sub, x + 20, y + 32);
     ctx.restore();
     
     // Separator
