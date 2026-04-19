@@ -318,7 +318,7 @@ function drawStoryCard(ctx, activity, routePoints, W, H) {
 
   // ─── Route — big, generous center area ────────────────────────────
   const ROUTE_TOP = lineY + 88;
-  const ROUTE_BOTTOM = H - 480;
+  const ROUTE_BOTTOM = H - 520;  // Moved up to avoid overlapping distance text (was H - 480)
   const routeArea = { x: PAD, y: ROUTE_TOP, w: W - PAD * 2, h: Math.max(ROUTE_BOTTOM - ROUTE_TOP, 400) };
 
   if (routePoints.length) {
