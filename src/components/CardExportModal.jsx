@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { generateActivityCard, downloadCanvas } from '../utils/generateCard.js';
 
 const FORMATS = [
@@ -67,17 +68,18 @@ export default function CardExportModal({ activity, onClose }) {
   const isStory = format === 'story';
   const previewAspect = isStory ? '9/16' : '1/1';
 
-  return (
+  return createPortal(
     <>
-      {/* Backdrop — on top of the drawer backdrop */}
+      {/* Backdrop — highest z-index to cover everything including maps */}
       <div
-        className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md"
+        className="fixed inset-0 z-[9998] bg-black/90"
         onClick={onClose}
+        style={{ backdropFilter: 'blur(8px)' }}
       />
 
-      {/* Modal */}
+      {/* Modal — above backdrop */}
       <div
-        className="fixed inset-0 z-[70] flex items-center justify-center p-6 pointer-events-none"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-6 pointer-events-none"
       >
         <div
           className="pointer-events-auto w-full flex flex-col md:flex-row gap-6"
@@ -278,6 +280,7 @@ export default function CardExportModal({ activity, onClose }) {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
