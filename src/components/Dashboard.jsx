@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistance, formatTime, formatPace, formatDate } from '../utils/formatters.js';
 
 function MetricCard({ label, value, unit, secondary }) {
@@ -101,9 +102,47 @@ const SORT_OPTIONS = [
   { label: 'Heart Rate ↓', value: 'hr_desc' },
 ];
 
-export default function Dashboard({ profile, activities, stats, onLoadMore, loadingMore, hasMoreActivities, onSelectActivity }) {
+const ActivityRow = memo(function ActivityRow({ activity, onClick }) {
+  return (
+    <tr
+      onClick={() => onClick(activity.id)}
+      className="activity-row cursor-pointer hover:bg-white/[0.02] transition-colors"
+    >
+      <td className="px-6 py-6 border-b border-white/[0.04] font-medium text-white text-sm">{activity.name}</td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-[10px] text-orange/70 uppercase tracking-wider">
+        {activity.sport_type || activity.type || '—'}
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
+        {formatDate(activity.start_date_local || activity.start_date)}
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-orange">
+        {formatDistance(activity.distance)}<span className="text-[10px] text-white/50 ml-1 uppercase">km</span>
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
+        {formatTime(activity.moving_time)}
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
+        {formatPace(activity.moving_time, activity.distance)}<span className="text-[10px] text-white/50 ml-1">/km</span>
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
+        {activity.average_heartrate ? <>{Math.round(activity.average_heartrate)}<span className="text-[10px] text-white/50 ml-1">bpm</span></> : '—'}
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
+        {activity.suffer_score ? Math.round(activity.suffer_score) : '—'}
+      </td>
+      <td className="px-6 py-6 border-b border-white/[0.04]">
+        <span className="font-mono text-[9px] text-white/20 uppercase tracking-widest group-hover:text-orange/60 transition-colors">
+          Detail →
+        </span>
+      </td>
+    </tr>
+  );
+});
+
+export default function Dashboard({ profile, activities, stats, onLoadMore, loadingMore, hasMoreActivities, apiGet }) {
   const [typeFilter, setTypeFilter] = useState('All');
   const [sortBy, setSortBy] = useState('recent');
+  const navigate = useNavigate();
 
   const filteredActivities = useMemo(() => {
     let list = typeFilter === 'All'
@@ -240,7 +279,7 @@ export default function Dashboard({ profile, activities, stats, onLoadMore, load
           {filteredActivities.length > 0 ? filteredActivities.map((a) => (
             <div
               key={a.id}
-              onClick={() => onSelectActivity(a.id)}
+              onClick={() => navigate(`/session/${a.id}`)}
               className="bg-void-2 border border-white/[0.06] px-4 py-4 cursor-pointer transition-all duration-200 active:border-orange/40"
             >
               <div className="flex justify-between items-start mb-3">
@@ -314,39 +353,7 @@ export default function Dashboard({ profile, activities, stats, onLoadMore, load
             <tbody>
               {filteredActivities.length > 0 ? (
                 filteredActivities.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="activity-row cursor-pointer"
-                    onClick={() => onSelectActivity(a.id)}
-                  >
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-medium text-white text-sm">{a.name}</td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-[10px] text-orange/70 uppercase tracking-wider">
-                      {a.sport_type || a.type || '—'}
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
-                      {formatDate(a.start_date_local || a.start_date)}
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-orange">
-                      {formatDistance(a.distance)}<span className="text-[10px] text-white/50 ml-1 uppercase">km</span>
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
-                      {formatTime(a.moving_time)}
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
-                      {formatPace(a.moving_time, a.distance)}<span className="text-[10px] text-white/50 ml-1">/km</span>
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
-                      {a.average_heartrate ? <>{Math.round(a.average_heartrate)}<span className="text-[10px] text-white/50 ml-1">bpm</span></> : '—'}
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04] font-mono text-sm text-white/60">
-                      {a.suffer_score ? Math.round(a.suffer_score) : '—'}
-                    </td>
-                    <td className="px-6 py-6 border-b border-white/[0.04]">
-                      <span className="font-mono text-[9px] text-white/20 uppercase tracking-widest group-hover:text-orange/60 transition-colors">
-                        Detail →
-                      </span>
-                    </td>
-                  </tr>
+                  <ActivityRow key={a.id} activity={a} onClick={() => navigate(`/session/${a.id}`)} />
                 ))
               ) : (
                 <tr>

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import OAuthScreen from './components/OAuthScreen.jsx';
 import LoadingScreen from './components/LoadingScreen.jsx';
 import Dashboard from './components/Dashboard.jsx';
 
-const ActivityDrawer = lazy(() => import('./components/ActivityDrawer.jsx'));
+const SessionDetailPage = lazy(() => import('./pages/SessionDetailPage.jsx'));
 import {
   saveTokens, loadTokens, clearTokens,
   isTokenExpired, needsRefresh, getTimeUntilExpiry,
@@ -22,8 +23,8 @@ export default function App() {
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreActivities, setHasMoreActivities] = useState(true);
-  const [selectedActivityId, setSelectedActivityId] = useState(null);
-
+  
+  const navigate = useNavigate();
   const accessTokenRef = useRef(null);
   const refreshTimerRef = useRef(null);
   const ACTIVITIES_PER_PAGE = 10;
@@ -134,7 +135,8 @@ export default function App() {
     setStats(null);
     setError('');
     setScreen('oauth');
-  }, []);
+    navigate('/');
+  }, [navigate]);
 
   // ── Init ─────────────────────────────────────────────────────────────────────
 
@@ -200,55 +202,47 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <>
     <div className="bg-void text-white min-h-screen overflow-x-hidden font-sans">
-      {/* Ambient glow blobs */}
-      <div
-        className="fixed pointer-events-none z-0 animate-pulse-glow"
-        style={{
-          top: '-50%', left: '-20%',
-          width: 800, height: 800,
-          background: 'radial-gradient(circle, rgba(252,76,2,0.08) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="fixed pointer-events-none z-0 animate-pulse-glow-delay"
-        style={{
-          top: '40%', left: '60%',
-          width: 600, height: 600,
-          background: 'radial-gradient(circle, rgba(252,76,2,0.08) 0%, transparent 70%)',
-        }}
-      />
-
+      {/* Clean background - no ambient glow animations for performance */}
       <div className="relative z-10">
         <Header profile={profile} onDisconnect={disconnect} />
         <main className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-          {screen === 'oauth' && <OAuthScreen error={error} />}
-          {screen === 'loading' && <LoadingScreen text={loadingText} />}
-          {screen === 'dashboard' && (
-            <Dashboard
-              profile={profile}
-              activities={activities}
-              stats={stats}
-              onLoadMore={loadMoreActivities}
-              loadingMore={loadingMore}
-              hasMoreActivities={hasMoreActivities}
-              onSelectActivity={setSelectedActivityId}
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                screen === 'oauth' ? (
+                  <OAuthScreen error={error} />
+                ) : screen === 'loading' ? (
+                  <LoadingScreen text={loadingText} />
+                ) : (
+                  <Dashboard
+                    profile={profile}
+                    activities={activities}
+                    stats={stats}
+                    onLoadMore={loadMoreActivities}
+                    loadingMore={loadingMore}
+                    hasMoreActivities={hasMoreActivities}
+                    apiGet={apiGet}
+                  />
+                )
+              } 
             />
-          )}
+            <Route 
+              path="/session/:activityId" 
+              element={
+                <Suspense fallback={<LoadingScreen text="Loading session..." />}>
+                  <SessionDetailPage 
+                    apiGet={apiGet} 
+                    onError={() => navigate('/')} 
+                  />
+                </Suspense>
+              } 
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
     </div>
-
-    {selectedActivityId && (
-      <Suspense fallback={null}>
-        <ActivityDrawer
-          activityId={selectedActivityId}
-          apiGet={apiGet}
-          onClose={() => setSelectedActivityId(null)}
-        />
-      </Suspense>
-    )}
-    </>
   );
 }
