@@ -36,7 +36,6 @@ export default function HeartRateZones({ zones }) {
 
   const enriched = buckets.map((b, i) => {
     const pct = (b.time / totalTime) * 100;
-    // Strava returns max: -1 for the top bucket (unbounded upper limit)
     const maxDisplay = b.max > 0 ? b.max : b.min + 30;
     return {
       ...b,
@@ -44,7 +43,7 @@ export default function HeartRateZones({ zones }) {
       maxDisplay,
       label: `Z${i + 1}`,
       name: ZONE_NAMES[i] || `Zone ${i + 1}`,
-      isHigh: i >= 3, // Z4, Z5 are high intensity
+      isHigh: i >= 3,
     };
   });
 
@@ -53,7 +52,7 @@ export default function HeartRateZones({ zones }) {
       <SectionLabel index="05" label="Heart Rate" sub="Time in Zone" />
 
       {/* Stacked bar */}
-      <div className="flex h-7 mb-6 overflow-hidden bg-white/[0.03]">
+      <div className="flex h-7 mb-6 overflow-hidden">
         {enriched.map((z, i) => (
           <div
             key={i}
@@ -62,13 +61,19 @@ export default function HeartRateZones({ zones }) {
               width: `${z.pct}%`,
               minWidth: z.pct > 0 ? '2px' : '0px',
               background: z.isHigh
-                ? `linear-gradient(90deg, rgba(252,76,2,${0.5 + i * 0.15}) 0%, rgba(252,76,2,${0.6 + i * 0.15}) 100%)`
-                : `linear-gradient(90deg, rgba(255,255,255,${0.04 + i * 0.06}) 0%, rgba(255,255,255,${0.06 + i * 0.06}) 100%)`,
+                ? (i === 4
+                  ? 'linear-gradient(90deg, #FF2D55 0%, #FF2D55cc 100%)'
+                  : 'linear-gradient(90deg, #FC4C02 0%, #FC4C02cc 100%)')
+                : (i === 2
+                  ? 'linear-gradient(90deg, rgba(252,76,2,0.25) 0%, rgba(252,76,2,0.15) 100%)'
+                  : i === 1
+                    ? 'linear-gradient(90deg, rgba(34,211,238,0.25) 0%, rgba(34,211,238,0.15) 100%)'
+                    : 'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)'),
             }}
           >
-            {z.pct >= 10 && (
+            {z.pct >= 8 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="font-mono text-[9px] text-white/40 uppercase tracking-widest">
+                <span className="font-mono text-[9px] text-white/60 uppercase tracking-widest">
                   {z.label}
                 </span>
               </div>
@@ -89,7 +94,7 @@ export default function HeartRateZones({ zones }) {
       {/* Zone rows */}
       <div className="space-y-1">
         {enriched.map((z, i) => {
-          const barFill = z.pct;
+          const barFill = Math.max(z.pct, 1);
           const isHigh = z.isHigh;
 
           return (
@@ -116,10 +121,10 @@ export default function HeartRateZones({ zones }) {
                     <div
                       className="absolute left-0 top-0 h-full"
                       style={{
-                        width: `${Math.max(barFill, 1)}%`,
+                        width: `${barFill}%`,
                         background: isHigh
                           ? 'linear-gradient(90deg, rgba(252,76,2,0.65) 0%, rgba(252,76,2,0.2) 100%)'
-                          : 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%)',
+                          : 'linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)',
                         boxShadow: isHigh ? '1px 0 12px rgba(252,76,2,0.25)' : 'none',
                         transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
@@ -128,7 +133,7 @@ export default function HeartRateZones({ zones }) {
                       <div
                         className="absolute top-0 h-full w-px"
                         style={{
-                          left: `${Math.max(barFill, 1)}%`,
+                          left: `${barFill}%`,
                           background: 'rgba(252,76,2,0.8)',
                           boxShadow: '0 0 4px rgba(252,76,2,0.6)',
                         }}
@@ -138,7 +143,7 @@ export default function HeartRateZones({ zones }) {
                 )}
                 {/* Duration label */}
                 <div className="absolute inset-0 flex items-center px-3">
-                  <span className={`font-mono text-[11px] font-medium ${isHigh ? 'text-orange' : 'text-white/45'}`}>
+                  <span className={`font-mono text-[11px] font-medium ${isHigh ? 'text-orange' : 'text-white/50'}`}>
                     {secToMmss(z.time)}
                   </span>
                 </div>
@@ -160,7 +165,7 @@ export default function HeartRateZones({ zones }) {
           <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Z4/Z5 Threshold+</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-1.5 bg-white/10" />
+          <div className="w-6 h-1.5 bg-white/12" />
           <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Z1–Z3</span>
         </div>
         <div className="ml-auto font-mono text-[8px] text-white/25 uppercase tracking-widest">
