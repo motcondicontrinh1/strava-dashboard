@@ -334,11 +334,11 @@ function SplitsBars({ splits }) {
 
 // ── Pure SVG chart — no external deps ────────────────────────────────────────
 
-function SvgChart({ data, hasHR }) {
+function SvgChart({ data, hasHR, hasCadence }) {
   const svgRef = useRef(null);
   const [tooltip, setTooltip] = useState(null);
 
-  const PAD = { top: 8, right: hasHR ? 40 : 8, bottom: 22, left: 40 };
+  const PAD = { top: 8, right: (hasHR || hasCadence) ? 44 : 8, bottom: 22, left: 40 };
   const W = 700, H = 150; // intrinsic SVG units — scales with viewBox
   const IW = W - PAD.left - PAD.right;
   const IH = H - PAD.top - PAD.bottom;
@@ -353,6 +353,10 @@ function SvgChart({ data, hasHR }) {
   const hMin = hasHR ? Math.min(...hrs) - 5 : 0;
   const hMax = hasHR ? Math.max(...hrs) + 5 : 200;
 
+  const cads = hasCadence ? data.filter(d => d.cadence).map(d => d.cadence) : [];
+  const cMin = hasCadence ? Math.min(...cads) - 5 : 0;
+  const cMax = hasCadence ? Math.max(...cads) + 5 : 200;
+
   const dists = data.map(d => d.dist);
   const dMin = dists[0], dMax = dists[dists.length - 1];
 
@@ -360,6 +364,7 @@ function SvgChart({ data, hasHR }) {
   // pace is reversed: higher sec = lower on chart
   const yPace = p => PAD.top + ((p - pDomain[0]) / (pDomain[1] - pDomain[0])) * IH;
   const yHR = h => PAD.top + ((hMax - h) / (hMax - hMin || 1)) * IH;
+  const yCadence = c => PAD.top + ((cMax - c) / (cMax - cMin || 1)) * IH;
 
   const pacePath = data.map((d, i) =>
     `${i === 0 ? 'M' : 'L'}${xScale(d.dist).toFixed(1)},${yPace(d.pace).toFixed(1)}`
@@ -367,6 +372,10 @@ function SvgChart({ data, hasHR }) {
 
   const hrPath = hasHR ? data.filter(d => d.hr).map((d, i) =>
     `${i === 0 ? 'M' : 'L'}${xScale(d.dist).toFixed(1)},${yHR(d.hr).toFixed(1)}`
+  ).join(' ') : '';
+
+  const cadencePath = hasCadence ? data.filter(d => d.cadence).map((d, i) =>
+    `${i === 0 ? 'M' : 'L'}${xScale(d.dist).toFixed(1)},${yCadence(d.cadence).toFixed(1)}`
   ).join(' ') : '';
 
   // Horizontal grid lines (4 lines)
@@ -419,6 +428,11 @@ function SvgChart({ data, hasHR }) {
           <path d={hrPath} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1" strokeLinejoin="round" />
         )}
 
+        {/* Cadence line */}
+        {cadencePath && (
+          <path d={cadencePath} fill="none" stroke="#22D3EE" strokeWidth="1" strokeDasharray="4,3" strokeLinejoin="round" />
+        )}
+
         {/* Pace line */}
         <path d={pacePath} fill="none" stroke="#FC4C02" strokeWidth="1.5" strokeLinejoin="round" />
 
@@ -462,6 +476,20 @@ function SvgChart({ data, hasHR }) {
           </text>
         ))}
 
+        {/* Y-axis: Cadence labels */}
+        {hasCadence && !hasHR && [cMin + 5, Math.round((cMin + cMax) / 2), cMax - 5].map((c, i) => (
+          <text
+            key={i}
+            x={W - PAD.right + 4} y={yCadence(c) + 3}
+            textAnchor="start"
+            fill="rgba(34,211,238,0.4)"
+            fontSize="7"
+            fontFamily="JetBrains Mono, monospace"
+          >
+            {Math.round(c)}
+          </text>
+        ))}
+
         {/* X-axis labels */}
         {xTicks.map(km => (
           <text
@@ -492,6 +520,10 @@ function SvgChart({ data, hasHR }) {
           <circle cx={xScale(tooltip.dist)} cy={yHR(tooltip.hr)} r="2.5"
             fill="rgba(255,255,255,0.6)" stroke="#0a0a0a" strokeWidth="1.5" />
         )}
+        {tooltip?.cadence && (
+          <circle cx={xScale(tooltip.dist)} cy={yCadence(tooltip.cadence)} r="2.5"
+            fill="#22D3EE" stroke="#0a0a0a" strokeWidth="1.5" />
+        )}
       </svg>
 
       {/* Floating tooltip */}
@@ -517,18 +549,26 @@ function SvgChart({ data, hasHR }) {
               <span className="text-white">{tooltip.hr} bpm</span>
             </div>
           )}
+          {tooltip.cadence && (
+            <div className="flex items-center gap-2 mt-0.5">
+              <span style={{ color: '#22D3EE' }}>▪</span>
+              <span className="text-white/50">Cadence</span>
+              <span className="text-white">{tooltip.cadence} spm</span>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function PerformanceChart({ streams }) {
+function PerformanceChart({ streams, activity }) {
   const chartData = useMemo(() => {
     if (!streams?.length) return [];
     const distStream = streams.find(s => s.type === 'distance')?.data || [];
     const velStream = streams.find(s => s.type === 'velocity_smooth')?.data || [];
     const hrStream = streams.find(s => s.type === 'heartrate')?.data || [];
+    const cadStream = streams.find(s => s.type === 'cadence')?.data || [];
 
     const step = Math.max(1, Math.floor(distStream.length / 300));
     const data = [];
@@ -540,19 +580,25 @@ function PerformanceChart({ streams }) {
         dist: +(distStream[i] / 1000).toFixed(2),
         pace,
         hr: hrStream[i] ? Math.round(hrStream[i]) : undefined,
+        cadence: cadStream[i] ? Math.round(cadStream[i] * 2) : undefined, // convert to spm
       });
     }
     return data;
   }, [streams]);
 
   const hasHR = chartData.some(d => d.hr);
+  const hasCadence = chartData.some(d => d.cadence);
   if (!chartData.length) return null;
+
+  // Running dynamics from activity summary (when available from compatible devices)
+  const gct = activity?.average_ground_contact_time;
+  const stride = activity?.average_stride_length;
 
   return (
     <div className="py-8 border-b border-white/[0.04]">
-      <SectionLabel index="03" label="Output" sub="Pace + Heart Rate" />
-      <SvgChart data={chartData} hasHR={hasHR} />
-      <div className="flex items-center gap-6 mt-3">
+      <SectionLabel index="03" label="Output" sub="Pace + Heart Rate + Cadence" />
+      <SvgChart data={chartData} hasHR={hasHR} hasCadence={hasCadence} />
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-px" style={{ background: '#FC4C02' }} />
           <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Pace</span>
@@ -561,6 +607,24 @@ function PerformanceChart({ streams }) {
           <div className="flex items-center gap-2">
             <div className="w-6 h-px bg-white/30" />
             <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Heart Rate</span>
+          </div>
+        )}
+        {hasCadence && (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-px" style={{ background: '#22D3EE' }} />
+            <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Cadence</span>
+          </div>
+        )}
+        {gct != null && (
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">GCT</span>
+            <span className="font-mono text-[8px] text-white/50">{Math.round(gct)} ms</span>
+          </div>
+        )}
+        {stride != null && (
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[8px] text-white/25 uppercase tracking-widest">Stride</span>
+            <span className="font-mono text-[8px] text-white/50">{stride.toFixed(2)} m</span>
           </div>
         )}
       </div>
@@ -615,7 +679,7 @@ export default function SessionDetailPage({ apiGet, onError }) {
         setLoading(true);
         const [d, s] = await Promise.allSettled([
           apiGet(`/activities/${activityId}`),
-          apiGet(`/activities/${activityId}/streams?keys=heartrate,velocity_smooth,altitude,distance,time`),
+          apiGet(`/activities/${activityId}/streams?keys=heartrate,velocity_smooth,altitude,distance,time,cadence`),
         ]);
         if (d.status === 'fulfilled') setActivity(d.value);
         else throw d.reason;
@@ -646,7 +710,7 @@ export default function SessionDetailPage({ apiGet, onError }) {
       {activity.splits_metric?.length > 0 && (
         <SplitsBars splits={activity.splits_metric} />
       )}
-      <PerformanceChart streams={streams} />
+      <PerformanceChart streams={streams} activity={activity} />
       <SecondaryMetrics activity={activity} />
 
       {/* Export Modal */}
