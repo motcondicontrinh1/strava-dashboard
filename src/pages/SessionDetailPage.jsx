@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet';
 
 const CardExportModal = lazy(() => import('../components/CardExportModal.jsx'));
+const HeartRateZones = lazy(() => import('../components/HeartRateZones.jsx'));
 
 // ── Polyline decoder ─────────────────────────────────────────────────────────
 
@@ -666,6 +667,7 @@ export default function SessionDetailPage({ apiGet, onError }) {
   const navigate = useNavigate();
   const [activity, setActivity] = useState(null);
   const [streams, setStreams] = useState(null);
+  const [zones, setZones] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -677,13 +679,15 @@ export default function SessionDetailPage({ apiGet, onError }) {
     async function fetchActivity() {
       try {
         setLoading(true);
-        const [d, s] = await Promise.allSettled([
+        const [d, s, z] = await Promise.allSettled([
           apiGet(`/activities/${activityId}`),
           apiGet(`/activities/${activityId}/streams?keys=heartrate,velocity_smooth,altitude,distance,time,cadence`),
+          apiGet(`/activities/${activityId}/zones`),
         ]);
         if (d.status === 'fulfilled') setActivity(d.value);
         else throw d.reason;
         if (s.status === 'fulfilled') setStreams(s.value);
+        if (z.status === 'fulfilled') setZones(z.value);
       } catch (err) {
         console.error('[SessionDetail] Failed:', err);
         if (!cancelled) {
@@ -711,6 +715,7 @@ export default function SessionDetailPage({ apiGet, onError }) {
         <SplitsBars splits={activity.splits_metric} />
       )}
       <PerformanceChart streams={streams} activity={activity} />
+      {zones && <HeartRateZones zones={zones} />}
       <SecondaryMetrics activity={activity} />
 
       {/* Export Modal */}

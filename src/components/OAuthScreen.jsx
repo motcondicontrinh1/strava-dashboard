@@ -2,7 +2,7 @@ const CLIENT_ID = '225803';
 
 export default function OAuthScreen({ error }) {
   const redirectUri = window.location.origin;
-  const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=read,activity:read,profile:read_all`;
+  const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=read,activity:read_all,profile:read_all`;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-89px)] text-center px-6">
